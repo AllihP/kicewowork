@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🚀 KICEKO ProjectHub — Django Backend
 
 Application de gestion de projets pour KICEKO CONSULTANT.
@@ -213,3 +214,7 @@ python manage.py shell
 ---
 
 *KICEKO CONSULTANT · N'Djaména, Tchad*
+=======
+# kicewowork
+Espace de coworking
+>>>>>>> f98d2bb91a8b1e8baa2750e006fa9782b5c8e9c2
