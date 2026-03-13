@@ -5,6 +5,41 @@
  */
 
 const API = '/api';
+/* ═══════════════════════════════════════
+   SÉCURITÉ — Protection XSS & Rate Limit
+   ═══════════════════════════════════════ */
+
+/**
+ * Échappe les caractères HTML dangereux pour prévenir les injections XSS.
+ * À utiliser sur TOUTE donnée utilisateur insérée via innerHTML.
+ */
+function esc(str) {
+  if (str == null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g,  '&amp;')
+    .replace(/</g,  '&lt;')
+    .replace(/>/g,  '&gt;')
+    .replace(/"/g,  '&quot;')
+    .replace(/'/g,  '&#x27;')
+    .replace(/\//g, '&#x2F;');
+}
+
+/** Échappe les valeurs CSS (couleurs, backgrounds) */
+function escCSS(val) {
+  if (!val) return 'transparent';
+  return String(val).replace(/[^a-zA-Z0-9#(),.% ]/g, '');
+}
+
+/** Limite la longueur des chaînes affichées */
+function truncate(str, max) {
+  if (!str) return '';
+  return str.length > max ? str.substring(0, max) + '…' : str;
+}
+
+/* ── Rate limiter login (protection brute force côté client) ── */
+const _loginAttempts = { count: 0, lockedUntil: 0 };
+
+
 
 // ══════════════════════════════════════════
 // ÉTAT GLOBAL
@@ -57,6 +92,15 @@ async function doLogin() {
     return; 
   }
   
+  /* Rate limiting côté client */
+  const now = Date.now();
+  if (_loginAttempts.lockedUntil > now) {
+    const wait = Math.ceil((_loginAttempts.lockedUntil - now) / 1000);
+    err.textContent = `Trop de tentatives. Réessayez dans ${wait}s.`;
+    err.style.display = 'block';
+    return;
+  }
+  
   try {
     const res = await fetch(`${API}/auth/login/`, { 
       method: 'POST', 
@@ -67,6 +111,7 @@ async function doLogin() {
     
     if (!res.ok) throw new Error(data.detail || 'Identifiants incorrects');
     
+    _loginAttempts.count = 0; _loginAttempts.lockedUntil = 0;
     localStorage.setItem('kh_access', data.access);
     localStorage.setItem('kh_refresh', data.refresh);
     localStorage.setItem('kh_user', JSON.stringify(data.user));
@@ -76,8 +121,15 @@ async function doLogin() {
     
     updateUserBar(data.user);
     await loadAll();
-  } catch(e) { 
-    err.textContent = e.message; 
+  } catch(e) {
+    _loginAttempts.count++;
+    if (_loginAttempts.count >= 5) {
+      _loginAttempts.lockedUntil = Date.now() + 30000; // 30s lock
+      _loginAttempts.count = 0;
+      err.textContent = 'Compte temporairement bloqué (5 tentatives). Réessayez dans 30s.';
+    } else {
+      err.textContent = 'Identifiants incorrects.';
+    }
     err.style.display = 'block'; 
   }
 }
@@ -270,8 +322,8 @@ function renderSidebar() {
   const active = D.projects.filter(p => p.status !== 'Terminé').slice(0, 6);
   el.innerHTML = active.length ? active.map(p => 
     `<div class="sb-proj" onclick="nav('projects',document.querySelector('[data-page=projects]'))">` +
-    `<div class="sb-dot" style="background:${STATUS_COLORS[p.status] || '#64748b'}"></div>` +
-    `<div class="sb-label">${p.name}</div>` +
+    `<div class="sb-dot" style="background:${escCSS(STATUS_COLORS[p.status] || '#64748b')}"></div>` +
+    `<div class="sb-label">${esc(p.name)}</div>` +
     `</div>`
   ).join('') : '<div style="font-size:11px;color:var(--text3);padding:8px 10px">Aucun projet actif</div>';
 }
@@ -294,8 +346,8 @@ function fmt(n) {
 
 function avEl(m, size = 32) {
   if (!m) return '';
-  const s = `width:${size}px;height:${size}px;font-size:${Math.round(size * 0.34)}px;background:${m.color || '#e8a020'};color:#000`;
-  return `<div class="av" style="${s}">${m.initials || '?'}</div>`;
+  const s = `width:${size}px;height:${size}px;font-size:${Math.round(size * 0.34)}px;background:${escCSS(m.color || '#e8a020')};color:#000`;
+  return `<div class="av" style="${s}">${esc(m.initials || '?')}</div>`;
 }
 
 function badge(type, val) {
@@ -306,7 +358,7 @@ function badge(type, val) {
     ao: { 'Détection': 'b-gray', 'Qualification': 'b-blue', 'Préparation': 'b-orange', 'Soumis': 'b-accent', 'Gagné': 'b-green', 'Perdu': 'b-red' }
   };
   const cls = (MAP[type] || {})[val] || 'b-gray';
-  return `<span class="badge ${cls}">${val}</span>`;
+  return `<span class="badge ${esc(cls)}">${esc(val)}</span>`;
 }
 
 function animCount(el, target, dur = 900) {
@@ -351,7 +403,7 @@ function renderDashboard() {
       `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">` +
       `<div style="width:4px;height:36px;border-radius:4px;background:${STATUS_COLORS[p.status] || '#64748b'};flex-shrink:0"></div>` +
       `<div style="flex:1;min-width:0">` +
-      `<div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>` +
+      `<div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</div>` +
       `<div style="margin-top:4px">` +
       `<div class="progress-wrap" style="margin-bottom:0">` +
       `<div class="progress-bar" style="width:${p.progress}%;background:${STATUS_COLORS[p.status] || 'var(--accent)'}"></div>` +
@@ -473,10 +525,10 @@ function renderProjects() {
       `<div class="left-bar" style="background:${color}"></div>` +
       `<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">` +
       `<div><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">` +
-      `<span style="font-size:10px;font-weight:700;color:var(--text3);font-family:var(--mono)">${p.category || '—'}</span>` +
-      `</div><div class="proj-name">${p.name}</div></div>` +
+      `<span style="font-size:10px;font-weight:700;color:var(--text3);font-family:var(--mono)">${esc(p.category || '—')}</span>` +
+      `</div><div class="proj-name">${esc(p.name)}</div></div>` +
       `${badge('status', p.status)}</div>` +
-      `<div class="proj-desc">${(p.description || '').substring(0, 90)}${(p.description || '').length > 90 ? '…' : ''}</div>` +
+      `<div class="proj-desc">${esc(truncate(p.description || '', 90))}</div>` +
       `<div class="progress-wrap"><div class="progress-bar" style="width:${p.progress || 0}%;background:${color}"></div></div>` +
       `<div class="proj-footer">` +
       `<div style="display:flex">${mems.map(m => avEl(m, 26)).join('')}</div>` +
@@ -528,7 +580,7 @@ function renderBoard() {
     
     return `<div class="k-col">` +
       `<div class="k-col-head" style="background:${bg}">` +
-      `<div class="k-col-name" style="color:${color}">${label}</div>` +
+      `<div class="k-col-name" style="color:${escCSS(color)}">${esc(label)}</div>` +
       `<div class="k-col-cnt">${colItems.length}</div>` +
       `<button class="k-add-btn" onclick="openWIModal(null,'${col}')">＋</button>` +
       `</div>` +
@@ -547,14 +599,14 @@ function renderTicket(w) {
   return `<div class="ticket tk-${w.type}" onclick="openWIModal(${w.id})">` +
     `<div class="t-bar"></div>` +
     `<div class="t-top">` +
-    `<span class="t-type tt-${w.type}">${(w.type || '').toUpperCase()}</span>` +
-    `<span class="t-id">#${w.id}</span>` +
-    `<span class="t-prio tp-${(w.priority || '').toLowerCase()}">${w.priority || '—'}</span>` +
+    `<span class="t-type tt-${esc(w.type)}">${esc((w.type || '').toUpperCase())}</span>` +
+    `<span class="t-id">#${esc(w.id)}</span>` +
+    `<span class="t-prio tp-${esc((w.priority || '').toLowerCase())}">${esc(w.priority || '—')}</span>` +
     `</div>` +
-    `<div class="t-title">${w.title || ''}</div>` +
+    `<div class="t-title">${esc(w.title || '')}</div>` +
     `<div class="t-foot">` +
-    `${project ? `📁 ${project.name}` : ''}` +
-    `<span class="t-pts">${w.pts}pts</span>` +
+    `${project ? `📁 ${esc(project.name)}` : ''}` +
+    `<span class="t-pts">${esc(w.pts)}pts</span>` +
     `${w.due ? `${overdue ? '⚠ ' : ''}${fd(w.due)}` : ''}` +
     `${assignee ? `<div class="t-av">${assignee.initials || '?'}</div>` : ''}` +
     `</div></div>`;
@@ -591,7 +643,7 @@ function renderBacklog() {
     return `<div class="bl-row ${typeIndent[w.type] || ''}" onclick="openWIModal(${w.id})">` +
       `<div class="bl-bar" style="background:${typeColor[w.type] || 'var(--text3)'}"></div>` +
       `${badge('type', w.type)}` +
-      `<div class="bl-title">${w.title}</div>` +
+      `<div class="bl-title">${esc(w.title)}</div>` +
       `${badge('status', w.status)} ${badge('prio', w.priority)}` +
       `${m ? `<div class="t-av" style="width:22px;height:22px;font-size:9px">${avEl(m, 22)}</div>` : ''}` +
       `<div class="bl-pts">${w.pts}pts</div>` +
@@ -625,7 +677,7 @@ function renderSprints() {
       `</div>` +
       `<div class="sp-pbar"><div class="sp-fill" style="width:${pct}%"></div></div>` +
       `<div style="display:flex;gap:8px;flex-wrap:wrap">` +
-      `${items.slice(0, 8).map(w => `<span style="font-size:10px">${badge('type', w.type)} ${(w.title || '').substring(0, 30)}</span>`).join('<span style="color:var(--border2);margin:0 2px">·</span>')} ` +
+      `${items.slice(0, 8).map(w => `<span style="font-size:10px">${badge('type', w.type)} ${esc(truncate(w.title || '', 30))}</span>`).join('<span style="color:var(--border2);margin:0 2px">·</span>')} ` +
       `${items.length > 8 ? `<span style="font-size:10px;color:var(--text3)">+${items.length - 8} autres</span>` : ''}` +
       `</div></div>`;
   }).join('');
@@ -653,7 +705,7 @@ function renderTenders() {
       const amt = D.tenders.filter(t => t.status === st).reduce((a, t) => a + (t.amount || 0), 0);
       
       return `<div class="pipe-st" onclick="filterAO('${st}')">` +
-        `<div class="pipe-name">${st}</div>` +
+        `<div class="pipe-name">${esc(st)}</div>` +
         `<div class="pipe-count" style="color:${PIPE_COLORS[st]}">${cnt}</div>` +
         `<div class="pipe-amt">${fmt(amt)} FCFA</div>` +
         `<div class="pipe-line" style="background:${PIPE_COLORS[st]}"></div>` +
@@ -678,13 +730,13 @@ function renderTenders() {
     const initials = (t.org || '').substring(0, 3).toUpperCase();
     
     return `<tr>` +
-      `<td><div class="org-wrap"><div class="org-logo" style="background:var(--accent)">${initials}</div>${t.org || ''}</div></td>` +
-      `<td style="font-weight:600">${t.title || ''}</td>` +
-      `<td style="font-family:var(--mono);color:var(--accent)">${fmt(t.amount)}</td>` +
-      `<td>${fd(t.deadline)}</td>` +
-      `<td>${badge('ao', t.status)}</td>` +
+      `<td data-label="Organisation"><div class="org-wrap"><div class="org-logo" style="background:var(--accent)">${esc(initials)}</div>${esc(t.org || '')}</div></td>` +
+      `<td data-label="Titre" style="font-weight:600">${esc(t.title || '')}</td>` +
+      `<td data-label="Montant" style="font-family:var(--mono);color:var(--accent)">${esc(fmt(t.amount))}</td>` +
+      `<td data-label="Deadline">${esc(fd(t.deadline))}</td>` +
+      `<td data-label="Statut">${badge('ao', t.status)}</td>` +
       `<td>${lead ? `<div style="display:flex;align-items:center;gap:6px">${avEl(lead, 24)}<span style="font-size:11px">${lead.name?.split(' ')[0] || ''}</span></div>` : '—'}</td>` +
-      `<td><button class="btn-xs" onclick="openAOModal(${t.id})">✏</button><button class="btn-del" onclick="delAO(${t.id})">✕</button></td>` +
+      `<td data-label="Actions"><button class="btn-xs" onclick="openAOModal(${parseInt(t.id)})">✏</button><button class="btn-del" onclick="delAO(${parseInt(t.id)})">✕</button></td>` +
       `</tr>`;
   }).join('');
 }
@@ -714,7 +766,7 @@ function renderTeam() {
     
     return `<div class="member-card">` +
       `<div class="member-head">` + avEl(m, 44) +
-      `<div><div class="member-name">${m.name}</div><div class="member-role">${m.role || '—'}</div></div>` +
+      `<div><div class="member-name">${esc(m.name)}</div><div class="member-role">${esc(m.role || '—')}</div></div>` +
       `</div>` +
       `<div class="m-stats">` +
       `<div class="m-stat"><div class="m-stat-val" style="color:var(--accent)">${active}</div><div class="m-stat-lbl">Actifs</div></div>` +
@@ -784,7 +836,7 @@ function renderAnalytics() {
     aprog.innerHTML = D.projects.map(p => 
       `<div style="margin-bottom:12px">` +
       `<div style="display:flex;justify-content:space-between;margin-bottom:5px">` +
-      `<span style="font-size:12px;color:var(--text2)">${(p.name || '').substring(0, 28)}</span>` +
+      `<span style="font-size:12px;color:var(--text2)">${esc(truncate(p.name || '', 28))}</span>` +
       `<span style="font-family:var(--mono);font-size:11px;color:${STATUS_COLORS[p.status] || 'var(--text3)'}">${p.progress || 0}%</span>` +
       `</div>` +
       `<div class="progress-wrap"><div class="progress-bar" style="width:${p.progress || 0}%;background:${STATUS_COLORS[p.status] || 'var(--accent)'}"></div></div>` +
@@ -861,6 +913,7 @@ function openWIModal(id = null, defaultStatus = null) {
 async function saveWI() {
   const title = document.getElementById('wi-title')?.value.trim();
   if (!title) { toast('Le titre est obligatoire', 'error', '⚠'); return; }
+  if (title.length > 200) { toast('Titre trop long (max 200 caractères)', 'error', '⚠'); return; }
   
   const payload = {
     title, 
@@ -926,6 +979,7 @@ function openProjModal(id = null) {
 async function saveProj() {
   const name = document.getElementById('proj-name')?.value.trim();
   if (!name) { toast('Le nom est obligatoire', 'error', '⚠'); return; }
+  if (name.length > 150) { toast('Nom de projet trop long (max 150 caractères)', 'error', '⚠'); return; }
   
   const msel = document.getElementById('proj-members');
   const members = msel ? Array.from(msel.selectedOptions).map(o => parseInt(o.value)) : [];
@@ -1014,6 +1068,7 @@ async function delAO(id) {
 async function saveMember() {
   const name = document.getElementById('mem-name')?.value.trim();
   if (!name) { toast('Le nom est obligatoire', 'error', '⚠'); return; }
+  if (name.length > 100) { toast('Nom trop long (max 100 caractères)', 'error', '⚠'); return; }
   
   const payload = {
     name, 
@@ -1050,7 +1105,7 @@ function toast(msg, type = 'info', icon = 'ℹ') {
   
   const el = document.createElement('div');
   el.className = `toast ${type}`;
-  el.innerHTML = `<span>${icon}</span><span class="toast-msg">${msg}</span>`;
+  el.innerHTML = `<span>${esc(icon)}</span><span class="toast-msg">${esc(msg)}</span>`;
   container.appendChild(el);
   setTimeout(() => el.remove(), 3200);
 }
