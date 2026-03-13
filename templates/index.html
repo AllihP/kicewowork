@@ -1,0 +1,990 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KICEKO ProjectHub</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/alerts_calendar.css' %}">
+    <link rel="icon" type="image/png" href="{% static 'img/logo.png' %}">
+    <style>
+        /* Surcharge teal — overrides alerts_calendar.css si elle utilise --accent gold */
+        :root {
+            --accent:    #0eb5cc !important;
+            --accent2:   #1dd4ec !important;
+            --accentbg:  rgba(14,181,204,.08) !important;
+            --accentbg2: rgba(14,181,204,.16) !important;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     ÉCRAN DE CONNEXION
+     ══════════════════════════════════════════════════════ -->
+<div id="login-screen" class="login-screen">
+    <div class="login-card">
+        <div class="login-logo">
+            <img src="{% static 'img/logo.png' %}" alt="KICEKO" style="width:90px;height:90px;object-fit:contain;filter:drop-shadow(0 0 16px rgba(14,181,204,.4))">
+        </div>
+        <h2 style="text-align:center;margin:16px 0 4px;font-size:19px;font-weight:700;letter-spacing:.5px">KICEKO ProjectHub</h2>
+        <p style="text-align:center;color:var(--text3);margin-bottom:28px;font-size:11px;font-family:var(--mono);letter-spacing:1px">CONNECTEZ-VOUS À VOTRE ESPACE</p>
+        <div class="form-group">
+            <label class="form-label">Nom d'utilisateur</label>
+            <input type="text" id="login-user" class="form-input" placeholder="admin">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Mot de passe</label>
+            <input type="password" id="login-pass" class="form-input" placeholder="••••••••">
+        </div>
+        <div id="login-err" style="display:none;color:var(--red);font-size:12px;margin-bottom:12px;text-align:center;padding:8px;background:var(--redbg);border-radius:6px"></div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px" onclick="doLogin()">
+            Se connecter →
+        </button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     APPLICATION PRINCIPALE
+     ══════════════════════════════════════════════════════ -->
+<div id="app" class="layout" style="display:none">
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">
+                <img src="{% static 'img/logo.png' %}" alt="K"
+                     style="width:36px;height:36px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(14,181,204,.3))">
+            </div>
+            <div>
+                <div class="logo-name">KICEKO ProjectHub</div>
+                <div class="logo-sub" id="role-label">WORKSPACE</div>
+            </div>
+        </div>
+
+        <!-- ── Vue d'ensemble ── -->
+        <div class="nav-label">⊞ Vue d'ensemble</div>
+        <nav class="nav-section">
+            <div class="nav-item active" data-page="dashboard" onclick="nav('dashboard',this)">
+                <span class="nav-icon">📊</span> Dashboard
+            </div>
+            <div class="nav-item" data-page="my-space" onclick="nav('my-space',this)">
+                <span class="nav-icon">🏠</span> Mon Espace
+            </div>
+        </nav>
+
+        <!-- ── Projets ── -->
+        <div class="nav-label">📁 Projets</div>
+        <nav class="nav-section">
+            <div class="nav-item" data-page="projects" onclick="nav('projects',this)">
+                <span class="nav-icon">🗂</span> Tous les projets
+            </div>
+            <div class="nav-item" data-page="board" onclick="nav('board',this)">
+                <span class="nav-icon">📋</span> Kanban Board
+                <span id="chip-board" class="nav-chip muted">0</span>
+            </div>
+            <div class="nav-item" data-page="backlog" onclick="nav('backlog',this)">
+                <span class="nav-icon">≡</span> Backlogs
+            </div>
+            <div class="nav-item" data-page="sprints" onclick="nav('sprints',this)">
+                <span class="nav-icon">⚡</span> Sprints
+            </div>
+        </nav>
+
+        <!-- ── Intelligence ── -->
+        <div class="nav-label">🧠 Intelligence</div>
+        <nav class="nav-section">
+            <div class="nav-item" data-page="calendar" onclick="nav('calendar',this)">
+                <span class="nav-icon">📅</span> Calendrier & Alertes
+                <span id="chip-alerts" class="nav-chip muted" style="background:var(--redbg);color:var(--red)">0</span>
+            </div>
+            <div class="nav-item" data-page="decision" onclick="nav('decision',this)">
+                <span class="nav-icon">🎯</span> Aide à la décision
+            </div>
+        </nav>
+
+        <!-- ── Business ── -->
+        <div class="nav-label">💼 Business</div>
+        <nav class="nav-section">
+            <div class="nav-item" data-page="tenders" onclick="nav('tenders',this)">
+                <span class="nav-icon">📄</span> Appels d'offres
+                <span id="chip-ao" class="nav-chip muted">0</span>
+            </div>
+        </nav>
+
+        <!-- ── Équipe ── -->
+        <div class="nav-label">👥 Équipe</div>
+        <nav class="nav-section">
+            <div class="nav-item" data-page="team" onclick="nav('team',this)">
+                <span class="nav-icon">👥</span> Membres
+            </div>
+            <div class="nav-item" data-page="analytics" onclick="nav('analytics',this)">
+                <span class="nav-icon">📈</span> Analytics
+            </div>
+            <div class="nav-item" data-page="users" onclick="nav('users',this)">
+                <span class="nav-icon">🔑</span> Utilisateurs
+            </div>
+        </nav>
+
+        <!-- Projets récents -->
+        <div class="nav-label" style="margin-top:8px">Projets récents</div>
+        <div id="sb-projects" class="nav-section" style="padding:0 10px"></div>
+
+        <!-- Footer utilisateur -->
+        <div class="sb-footer">
+            <div class="user-row" onclick="doLogout()" title="Se déconnecter">
+                <div id="user-av" class="av" style="width:30px;height:30px;font-size:11px;background:var(--accentbg);color:var(--accent);border:1px solid rgba(14,181,204,.3)">HP</div>
+                <div style="font-size:12px;font-weight:500;flex:1;min-width:0">
+                    <div id="user-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Hilla Prince</div>
+                    <div id="user-role-lbl" style="font-size:10px;color:var(--text3)">Se déconnecter</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── MAIN CONTENT ── -->
+    <main class="main">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <div>
+                <div id="tb-title" class="page-title">Dashboard</div>
+                <div id="tb-sub" class="page-sub">KICEKO ProjectHub · Vue d'ensemble</div>
+            </div>
+            <div class="topbar-right">
+                <div class="search-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="search-input" placeholder="Rechercher..." oninput="handleSearch(this.value)">
+                </div>
+                <!-- NOTIFICATION BELL — gérée par alerts_calendar.js -->
+                <!-- Le div#notif-anchor est le point d'insertion unique -->
+                <div id="notif-anchor"></div>
+                <button class="btn btn-primary btn-sm" onclick="openAdd()">＋ Nouveau</button>
+            </div>
+        </header>
+
+        <!-- CONTENT AREA -->
+        <div class="content">
+
+            <!-- ══════════ DASHBOARD ══════════ -->
+            <section id="page-dashboard" class="page active">
+                <div class="stats-grid">
+                    <div class="stat-card c-accent" onclick="nav('board',document.querySelector('[data-page=board]'))">
+                        <div id="s1" class="stat-value">0</div>
+                        <div class="stat-label">Work Items actifs</div>
+                        <div id="s1c" class="stat-change neutral">—</div>
+                        <div class="stat-icon">📋</div>
+                    </div>
+                    <div class="stat-card c-blue" onclick="nav('projects',document.querySelector('[data-page=projects]'))">
+                        <div id="s2" class="stat-value">0</div>
+                        <div class="stat-label">Projets en cours</div>
+                        <div id="s2c" class="stat-change neutral">—</div>
+                        <div class="stat-icon">📁</div>
+                    </div>
+                    <div class="stat-card c-green" onclick="nav('board',document.querySelector('[data-page=board]'))">
+                        <div id="s3" class="stat-value">0</div>
+                        <div class="stat-label">Tâches terminées</div>
+                        <div id="s3c" class="stat-change up">↑</div>
+                        <div class="stat-icon">✅</div>
+                    </div>
+                    <div class="stat-card c-purple" onclick="nav('tenders',document.querySelector('[data-page=tenders]'))">
+                        <div id="s4" class="stat-value">0</div>
+                        <div class="stat-label">AO en pipeline</div>
+                        <div id="s4c" class="stat-change up">↑</div>
+                        <div class="stat-icon">📄</div>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="section-title">Projets récents</div>
+                        <div id="d-projects"></div>
+                        <div style="text-align:center;margin-top:12px">
+                            <button class="btn btn-outline btn-sm" onclick="nav('projects',document.querySelector('[data-page=projects]'))">Voir tout →</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="section-title">Activité récente</div>
+                        <div id="d-activity"></div>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="margin-top:16px">
+                    <div class="card">
+                        <div class="section-title">Tickets par statut</div>
+                        <div id="d-wi-chart"></div>
+                    </div>
+                    <div class="card">
+                        <div class="section-title">Sprint en cours</div>
+                        <div id="d-sprint"></div>
+                    </div>
+                </div>
+
+                <!-- ALERTES CRITIQUES dans le Dashboard -->
+                <div class="card" style="margin-top:16px;border-color:rgba(239,68,68,.2)">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                        <div class="section-title" style="margin:0">🚨 Alertes & Risques</div>
+                        <button class="btn btn-outline btn-sm" onclick="nav('calendar',document.querySelector('[data-page=calendar]'))">
+                            Voir le calendrier →
+                        </button>
+                    </div>
+                    <div id="d-alerts-summary"></div>
+                </div>
+
+                <div class="card" style="margin-top:16px">
+                    <div class="section-title">Pipeline AO</div>
+                    <div id="d-ao-quick"></div>
+                </div>
+            </section>
+
+            <!-- ══════════ MON ESPACE ══════════ -->
+            <section id="page-my-space" class="page">
+                <div id="my-space-content">
+                    <div style="text-align:center;padding:40px;color:var(--text3)">Chargement...</div>
+                </div>
+            </section>
+
+            <!-- ══════════ PROJETS ══════════ -->
+            <section id="page-projects" class="page">
+                <div class="filter-bar" id="proj-filters">
+                    <button class="filter-btn active" onclick="filterProj('',this)">Tous</button>
+                    <button class="filter-btn" onclick="filterProj('En cours',this)">En cours</button>
+                    <button class="filter-btn" onclick="filterProj('Planifié',this)">Planifié</button>
+                    <button class="filter-btn" onclick="filterProj('En attente',this)">En attente</button>
+                    <button class="filter-btn" onclick="filterProj('Terminé',this)">Terminé</button>
+                </div>
+                <div style="font-size:11px;color:var(--text3);margin-bottom:12px" id="proj-count-lbl"></div>
+                <div id="proj-grid" class="grid-3"></div>
+            </section>
+
+            <!-- ══════════ KANBAN BOARD ══════════ -->
+            <section id="page-board" class="page">
+                <div class="board-toolbar">
+                    <select id="board-proj-sel" class="sel" onchange="renderBoard()">
+                        <option value="">Tous les projets</option>
+                    </select>
+                    <div id="board-type-filters" class="filter-bar">
+                        <button class="filter-btn active" onclick="setBoardFilter('',this)">Tout</button>
+                        <button class="filter-btn" onclick="setBoardFilter('epic',this)">Epic</button>
+                        <button class="filter-btn" onclick="setBoardFilter('feature',this)">Feature</button>
+                        <button class="filter-btn" onclick="setBoardFilter('story',this)">Story</button>
+                        <button class="filter-btn" onclick="setBoardFilter('task',this)">Task</button>
+                        <button class="filter-btn" onclick="setBoardFilter('bug',this)">Bug</button>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="openWIModal()">＋ Ticket</button>
+                </div>
+                <div id="kanban-board" class="kanban"></div>
+            </section>
+
+            <!-- ══════════ BACKLOG ══════════ -->
+            <section id="page-backlog" class="page">
+                <div style="margin-bottom:16px;display:flex;gap:10px;align-items:center">
+                    <select id="bl-proj-sel" class="sel" onchange="renderBacklog()">
+                        <option value="">Tous les projets</option>
+                    </select>
+                    <button class="btn btn-primary btn-sm" onclick="openWIModal()">＋ Ajouter</button>
+                </div>
+                <div id="backlog-list"></div>
+            </section>
+
+            <!-- ══════════ SPRINTS ══════════ -->
+            <section id="page-sprints" class="page">
+                <div style="margin-bottom:16px">
+                    <button class="btn btn-primary btn-sm" onclick="toast('Création de sprint à venir','info','⚡')">＋ Nouveau sprint</button>
+                </div>
+                <div id="sprints-list"></div>
+            </section>
+
+            <!-- ══════════ CALENDRIER & ALERTES ══════════ -->
+            <section id="page-calendar" class="page">
+                <div id="cal-main-wrapper">
+                    <div style="text-align:center;padding:60px;color:var(--text3)">
+                        <div class="app-loading-spinner" style="margin:0 auto 16px"></div>
+                        Chargement du calendrier...
+                    </div>
+                </div>
+            </section>
+
+            <!-- ══════════ AIDE À LA DÉCISION ══════════ -->
+            <section id="page-decision" class="page">
+                <div id="decision-content">
+                    <div style="text-align:center;padding:40px;color:var(--text3)">Chargement...</div>
+                </div>
+            </section>
+
+            <!-- ══════════ APPELS D'OFFRES ══════════ -->
+            <section id="page-tenders" class="page">
+                <div id="ao-pipeline" class="pipeline"></div>
+                <div style="margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                    <select id="ao-filter-sel" class="sel" onchange="renderTenders()">
+                        <option value="">Tous les AO</option>
+                        <option value="Détection">Détection</option>
+                        <option value="Qualification">Qualification</option>
+                        <option value="Préparation">Préparation</option>
+                        <option value="Soumis">Soumis</option>
+                        <option value="Gagné">Gagné</option>
+                        <option value="Perdu">Perdu</option>
+                    </select>
+                    <button class="btn btn-primary btn-sm" onclick="openAOModal()">＋ Nouvel AO</button>
+                </div>
+                <div style="overflow-x:auto">
+                    <table class="ao-table">
+                        <thead>
+                            <tr>
+                                <th>Organisation</th>
+                                <th>Titre</th>
+                                <th>Montant (FCFA)</th>
+                                <th>Deadline</th>
+                                <th>Statut</th>
+                                <th>Responsable</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ao-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ══════════ ÉQUIPE ══════════ -->
+            <section id="page-team" class="page">
+                <div style="margin-bottom:16px">
+                    <button class="btn btn-primary btn-sm" onclick="om('modal-member')">＋ Nouveau membre</button>
+                </div>
+                <div id="team-grid" class="grid-3"></div>
+            </section>
+
+            <!-- ══════════ ANALYTICS ══════════ -->
+            <section id="page-analytics" class="page">
+                <div class="section-title">Avancement des projets</div>
+                <div id="an-progress" style="margin-bottom:22px"></div>
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="section-title">Work Items par priorité</div>
+                        <div id="an-prio"></div>
+                    </div>
+                    <div class="card">
+                        <div class="section-title">Vélocité des sprints</div>
+                        <div id="an-velocity"></div>
+                    </div>
+                </div>
+                <div class="card" style="margin-top:16px">
+                    <div class="section-title">KPIs & Métriques</div>
+                    <div id="an-stats" class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin:0"></div>
+                    <div id="an-kpis"></div>
+                </div>
+            </section>
+
+            <!-- ══════════ UTILISATEURS (Admin) ══════════ -->
+            <section id="page-users" class="page">
+                <div id="users-content">
+                    <div style="text-align:center;padding:40px;color:var(--text3)">Chargement...</div>
+                </div>
+            </section>
+
+        </div><!-- /content -->
+    </main>
+</div><!-- /app -->
+
+<!-- ══════════════════════════════════════════════════════
+     LOADING OVERLAY (corrigé — class-based)
+     ══════════════════════════════════════════════════════ -->
+<div id="app-loading" class="app-loading-overlay">
+    <div class="app-loading-logo">KH</div>
+    <div class="app-loading-spinner"></div>
+    <div class="app-loading-title">Chargement des données…</div>
+    <div class="app-loading-sub">KICEKO ProjectHub · Veuillez patienter</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODALS
+     ══════════════════════════════════════════════════════ -->
+
+<!-- Modal Work Item -->
+<div id="modal-wi" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-title">
+            <span id="mwi-label">Nouveau Ticket</span>
+            <button class="modal-close" onclick="cm('modal-wi')">×</button>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Titre *</label>
+            <input type="text" id="wi-title" class="form-input" placeholder="Titre du ticket">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Type</label>
+                <select id="wi-type" class="form-select">
+                    <option value="epic">🏔 Epic</option>
+                    <option value="feature">⭐ Feature</option>
+                    <option value="story">📖 User Story</option>
+                    <option value="task" selected>✅ Task</option>
+                    <option value="bug">🐛 Bug</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Priorité</label>
+                <select id="wi-prio" class="form-select">
+                    <option value="Haute">🔴 Haute</option>
+                    <option value="Moyenne" selected>🟠 Moyenne</option>
+                    <option value="Basse">🟢 Basse</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Statut</label>
+                <select id="wi-status" class="form-select">
+                    <option value="Backlog">Backlog</option>
+                    <option value="A faire">À faire</option>
+                    <option value="En cours">En cours</option>
+                    <option value="Review">Review</option>
+                    <option value="Terminé">Terminé</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Story Points</label>
+                <select id="wi-pts" class="form-select">
+                    <option value="1">1</option><option value="2">2</option>
+                    <option value="3">3</option><option value="5" selected>5</option>
+                    <option value="8">8</option><option value="13">13</option>
+                    <option value="21">21</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Assigné à</label>
+                <select id="wi-assignee" class="form-select"></select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Projet</label>
+                <select id="wi-project" class="form-select"></select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Échéance</label>
+            <input type="date" id="wi-due" class="form-input">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea id="wi-desc" class="form-textarea" placeholder="Description détaillée..."></textarea>
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-ghost" onclick="cm('modal-wi')">Annuler</button>
+            <button class="btn btn-primary" onclick="saveWI()">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Projet -->
+<div id="modal-proj" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-title">
+            <span id="mproj-label">Nouveau Projet</span>
+            <button class="modal-close" onclick="cm('modal-proj')">×</button>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Nom du projet *</label>
+            <input type="text" id="proj-name" class="form-input" placeholder="Nom du projet">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea id="proj-desc" class="form-textarea" placeholder="Description..."></textarea>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Catégorie</label>
+                <select id="proj-cat" class="form-select">
+                    <option value="IT">IT / Dev</option>
+                    <option value="GIS">SIG / Cartographie</option>
+                    <option value="AO">Appel d'offres</option>
+                    <option value="Interne">Interne</option>
+                    <option value="Partenariat">Partenariat</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Statut</label>
+                <select id="proj-status" class="form-select">
+                    <option value="Planifié">Planifié</option>
+                    <option value="En cours">En cours</option>
+                    <option value="En attente">En attente</option>
+                    <option value="Bloqué">Bloqué</option>
+                    <option value="Terminé">Terminé</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Progression (%)</label>
+                <input type="number" id="proj-progress" class="form-input" value="0" min="0" max="100">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Deadline</label>
+                <input type="date" id="proj-deadline" class="form-input">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Membres</label>
+            <select id="proj-members" class="form-select" multiple size="4"></select>
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-ghost" onclick="cm('modal-proj')">Annuler</button>
+            <button class="btn btn-outline" onclick="if(editProjId)openSWOT(editProjId)" id="btn-swot-proj" style="display:none">🧠 SWOT</button>
+            <button class="btn btn-primary" onclick="saveProj()">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal AO -->
+<div id="modal-ao" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-title">
+            <span>Appel d'offres</span>
+            <button class="modal-close" onclick="cm('modal-ao')">×</button>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Titre *</label>
+            <input type="text" id="ao-title" class="form-input" placeholder="Titre de l'AO">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Organisation</label>
+            <input type="text" id="ao-org" class="form-input" placeholder="Organisation">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Montant (FCFA)</label>
+                <input type="number" id="ao-amount" class="form-input" value="0">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Deadline</label>
+                <input type="date" id="ao-deadline" class="form-input">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Statut</label>
+                <select id="ao-status" class="form-select">
+                    <option value="Détection">Détection</option>
+                    <option value="Qualification">Qualification</option>
+                    <option value="Préparation">Préparation</option>
+                    <option value="Soumis">Soumis</option>
+                    <option value="Gagné">Gagné</option>
+                    <option value="Perdu">Perdu</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Responsable</label>
+                <select id="ao-lead" class="form-select"></select>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-ghost" onclick="cm('modal-ao')">Annuler</button>
+            <button class="btn btn-primary" onclick="saveAO()">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Membre -->
+<div id="modal-member" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-title">
+            <span>Nouveau Membre</span>
+            <button class="modal-close" onclick="cm('modal-member')">×</button>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Prénom & Nom *</label>
+            <input type="text" id="mem-name" class="form-input" placeholder="Nom complet">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Rôle / Poste</label>
+            <input type="text" id="mem-role" class="form-input" placeholder="Développeur, Chef de projet...">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Initiales</label>
+                <input type="text" id="mem-init" class="form-input" maxlength="3" placeholder="HP">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Couleur avatar</label>
+                <input type="color" id="mem-color" class="form-input" value="#e8a020" style="height:42px;padding:4px">
+            </div>
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-ghost" onclick="cm('modal-member')">Annuler</button>
+            <button class="btn btn-primary" onclick="saveMember()">Ajouter</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal SWOT (dynamique — géré par rbac_swot.js) -->
+<div id="modal-swot" class="modal-overlay" style="z-index:600">
+    <div class="modal" style="max-width:780px;width:100%">
+        <div id="swot-content">Chargement...</div>
+    </div>
+</div>
+
+<!-- Modal Événement Calendrier -->
+<div id="evt-modal" class="evt-modal-overlay" onclick="closeEvtModal(event)">
+    <div class="evt-modal">
+        <div id="evt-modal-content"></div>
+    </div>
+</div>
+
+<!-- Toasts -->
+<div id="toasts" class="toasts"></div>
+
+<!-- Menu Mobile -->
+<div class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCRIPTS — ordre important
+     ══════════════════════════════════════════════════════ -->
+<script src="{% static 'js/app.js' %}"></script>
+<script src="{% static 'js/alerts_calendar.js' %}"></script>
+<script src="{% static 'js/rbac_swot.js' %}"></script>
+
+<script>
+// ── Patches d'intégration ──────────────────────────────
+
+// 1. PAGE_TITLES et PAGE_SUBS pour les nouvelles pages
+Object.assign(PAGE_TITLES, {
+    'my-space':  'Mon Espace',
+    'calendar':  'Calendrier & Alertes',
+    'decision':  'Aide à la décision',
+    'users':     'Gestion Utilisateurs',
+});
+Object.assign(PAGE_SUBS, {
+    'my-space':  'Mes projets et tâches assignées',
+    'calendar':  'Deadlines · Risques · Timeline Gantt',
+    'decision':  'Analyse SWOT · Scores de risque · Recommandations',
+    'users':     'Rôles & accès · Administration',
+});
+
+// 2. Enregistrer les renderers pour les nouvelles pages
+const _origRenderPage2 = renderPage;
+function renderPage(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const pg = document.getElementById('page-' + page);
+    if (pg) pg.classList.add('active');
+
+    const extraRenderers = {
+        'my-space': renderMySpacePage,
+        'calendar': renderCalendarPage,
+        'decision': renderDecisionPage,
+        'users':    renderUsersPage,
+    };
+    if (extraRenderers[page]) {
+        extraRenderers[page]();
+    } else {
+        _origRenderPage2(page);
+    }
+}
+
+// 3. renderCalendarPage — wrappeur qui appelle alerts_calendar.js
+function renderCalendarPage() {
+    const wrapper = document.getElementById('cal-main-wrapper');
+    if (wrapper) wrapper.innerHTML = '';
+    if (typeof renderCalendar === 'function') renderCalendar();
+}
+
+// 4. renderMySpacePage — wrappeur pour rbac_swot.js
+function renderMySpacePage() {
+    if (typeof renderMySpace === 'function') renderMySpace();
+}
+
+// 5. renderUsersPage — wrappeur pour rbac_swot.js
+function renderUsersPage() {
+    const pg = document.getElementById('users-content');
+    if (pg) pg.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3)">Chargement...</div>';
+    if (typeof renderUsersAdmin === 'function') renderUsersAdmin();
+}
+
+// 6. renderDecisionPage — Aide à la décision intelligente
+function renderDecisionPage() {
+    const pg = document.getElementById('decision-content');
+    if (!pg) return;
+
+    const alerts = typeof AlertEngine !== 'undefined' ? AlertEngine.compute() : [];
+    const critical = alerts.filter(a => a.level === 'critical');
+    const riskProjects = D.projects
+        .filter(p => p.status !== 'Terminé')
+        .map(p => {
+            const score = typeof AlertEngine !== 'undefined' ? AlertEngine.riskScore(p) : { score: 0, color: 'var(--text3)', factors: [] };
+            return { ...p, _risk: score };
+        })
+        .sort((a, b) => b._risk.score - a._risk.score)
+        .slice(0, 6);
+
+    const totalAO     = D.tenders.length;
+    const wonAO       = D.tenders.filter(t => t.status === 'Gagné').length;
+    const winRate     = totalAO ? Math.round(wonAO / totalAO * 100) : 0;
+    const pendingAO   = D.tenders.filter(t => !['Gagné','Perdu'].includes(t.status)).length;
+    const totalBudget = D.tenders.reduce((s, t) => s + (t.amount || 0), 0);
+
+    pg.innerHTML = `
+        <!-- En-tête -->
+        <div style="margin-bottom:24px;padding:18px 20px;background:linear-gradient(135deg,rgba(232,160,32,.08),var(--card));border:1px solid rgba(232,160,32,.2);border-radius:var(--radius);display:flex;align-items:center;gap:16px">
+            <div style="font-size:32px">🎯</div>
+            <div>
+                <div style="font-size:16px;font-weight:700">Aide à la décision intelligente</div>
+                <div style="font-size:12px;color:var(--text2);margin-top:2px">Analyse automatique des risques, recommandations et indicateurs de performance</div>
+            </div>
+            <div style="margin-left:auto">
+                <span style="font-size:10px;padding:4px 10px;background:var(--greenbg);color:var(--green);border-radius:6px;font-weight:700;font-family:var(--mono)">
+                    ● LIVE
+                </span>
+            </div>
+        </div>
+
+        <!-- KPIs stratégiques -->
+        <div class="stats-grid" style="margin-bottom:20px">
+            <div class="stat-card c-accent">
+                <div class="stat-value">${critical.length}</div>
+                <div class="stat-label">Alertes critiques</div>
+                <div class="stat-change ${critical.length > 0 ? 'down' : 'up'}">${critical.length > 0 ? '⚠ Action requise' : '✅ Sous contrôle'}</div>
+                <div class="stat-icon">🚨</div>
+            </div>
+            <div class="stat-card c-green">
+                <div class="stat-value">${winRate}%</div>
+                <div class="stat-label">Taux de succès AO</div>
+                <div class="stat-change neutral">${wonAO}/${totalAO} gagnés</div>
+                <div class="stat-icon">🏆</div>
+            </div>
+            <div class="stat-card c-blue">
+                <div class="stat-value">${pendingAO}</div>
+                <div class="stat-label">AO en cours</div>
+                <div class="stat-change neutral">${fmt(totalBudget)} FCFA</div>
+                <div class="stat-icon">💼</div>
+            </div>
+            <div class="stat-card c-purple">
+                <div class="stat-value">${D.projects.filter(p=>p.status==='En cours').length}</div>
+                <div class="stat-label">Projets actifs</div>
+                <div class="stat-change neutral">${D.members.length} membres</div>
+                <div class="stat-icon">📊</div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <!-- Scores de risque -->
+            <div class="card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+                    <div class="section-title" style="margin:0">🧠 Scores de risque projets</div>
+                    <button class="btn btn-outline btn-sm" onclick="nav('calendar',document.querySelector('[data-page=calendar]'));setTimeout(()=>setCalView('risk'),200)">
+                        Vue détaillée →
+                    </button>
+                </div>
+                ${riskProjects.map(p => {
+                    const r = p._risk;
+                    const r2 = 16, cx = 20, cy = 20;
+                    const circ = 2 * Math.PI * r2;
+                    const dash = circ * r.score / 100;
+                    return `<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="openSWOT(${p.id})">
+                        <svg width="40" height="40" viewBox="0 0 40 40" style="transform:rotate(-90deg);flex-shrink:0">
+                            <circle cx="${cx}" cy="${cy}" r="${r2}" fill="none" stroke="var(--border)" stroke-width="3"/>
+                            <circle cx="${cx}" cy="${cy}" r="${r2}" fill="none" stroke="${r.color}" stroke-width="3"
+                                stroke-dasharray="${dash} ${circ}" stroke-linecap="round"/>
+                        </svg>
+                        <div style="flex:1;min-width:0">
+                            <div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
+                            <div style="font-size:10px;color:var(--text3)">${p.status} · ${p.progress||0}%</div>
+                        </div>
+                        <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${r.color}">${r.score}</div>
+                        <div style="font-size:10px;color:var(--text3)">🧠 SWOT</div>
+                    </div>`;
+                }).join('') || '<div style="text-align:center;padding:20px;color:var(--text3)">Aucun projet actif</div>'}
+            </div>
+
+            <!-- Recommandations automatiques -->
+            <div class="card">
+                <div class="section-title">💡 Recommandations</div>
+                <div id="recommendations-list">
+                    ${generateRecommendations()}
+                </div>
+            </div>
+        </div>
+
+        <!-- SWOT comparatif -->
+        <div class="card" style="margin-top:16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+                <div class="section-title" style="margin:0">🧠 Matrices SWOT des projets actifs</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    ${D.projects.filter(p=>p.status!=='Terminé').slice(0,5).map(p =>
+                        `<button class="btn btn-outline btn-sm" onclick="openSWOT(${p.id})">
+                            ${p.name.substring(0,18)}
+                        </button>`
+                    ).join('')}
+                </div>
+            </div>
+            <div style="font-size:12px;color:var(--text2);padding:10px;background:var(--surface);border-radius:8px">
+                Clique sur un projet ci-dessus pour voir sa matrice SWOT complète, générée automatiquement depuis les données du projet en temps réel.
+            </div>
+        </div>
+
+        <!-- Analyse pipeline AO -->
+        <div class="card" style="margin-top:16px">
+            <div class="section-title">📊 Analyse Pipeline Commercial</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:12px">
+                ${[
+                    ['Détection','var(--text3)'],
+                    ['Qualification','var(--blue)'],
+                    ['Préparation','var(--orange)'],
+                    ['Soumis','var(--accent)'],
+                    ['Gagné','var(--green)'],
+                    ['Perdu','var(--red)'],
+                ].map(([s,c]) => {
+                    const items = D.tenders.filter(t=>t.status===s);
+                    const total = items.reduce((a,t)=>a+(t.amount||0),0);
+                    return `<div style="padding:12px;background:var(--surface);border-radius:8px;border-left:3px solid ${c}">
+                        <div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:6px">${s.toUpperCase()}</div>
+                        <div style="font-size:20px;font-weight:700;color:${c}">${items.length}</div>
+                        <div style="font-size:10px;color:var(--text2);margin-top:2px">${fmt(total)} FCFA</div>
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function generateRecommendations() {
+    const recs = [];
+    const now  = new Date();
+
+    // Retards projets
+    D.projects.forEach(p => {
+        if (!p.deadline || p.status === 'Terminé') return;
+        const diff = Math.floor((new Date(p.deadline) - now) / 86400000);
+        if (diff < 0) recs.push({ icon:'🚨', level:'critical', text:`Relancer le projet <strong>${p.name}</strong> — deadline dépassée de ${Math.abs(diff)}j`, action:`openSWOT(${p.id})`, actionLabel:'Voir SWOT' });
+        else if (diff <= 7 && (p.progress||0) < 70) recs.push({ icon:'⚠️', level:'warning', text:`Accélérer <strong>${p.name}</strong> — ${diff}j restants, ${p.progress||0}% seulement`, action:`nav('board',null)`, actionLabel:'Kanban' });
+    });
+
+    // Bugs critiques
+    const bugs = D.workItems.filter(w => w.type === 'bug' && w.status !== 'Terminé');
+    if (bugs.length >= 3) recs.push({ icon:'🐛', level:'warning', text:`<strong>${bugs.length} bugs ouverts</strong> — dette technique à résorber en priorité`, action:`nav('board',null)`, actionLabel:'Voir bugs' });
+
+    // AO sans responsable
+    const aoSansResp = D.tenders.filter(t => !t.lead && !['Gagné','Perdu'].includes(t.status));
+    if (aoSansResp.length) recs.push({ icon:'📋', level:'info', text:`<strong>${aoSansResp.length} AO sans responsable</strong> — assigner un référent`, action:`nav('tenders',null)`, actionLabel:'AO' });
+
+    // Bonne nouvelle
+    const won = D.tenders.filter(t => t.status === 'Gagné');
+    if (won.length > 0) recs.push({ icon:'🏆', level:'success', text:`<strong>${won.length} AO gagnés</strong> — capitaliser sur ces succès pour de nouvelles opportunités`, action:null });
+
+    if (!recs.length) recs.push({ icon:'✅', level:'success', text:'Tous les indicateurs sont au vert — continuez ainsi !', action:null });
+
+    const colors = { critical:'var(--red)', warning:'var(--orange)', info:'var(--blue)', success:'var(--green)' };
+    const bgs    = { critical:'var(--redbg)', warning:'var(--orangebg)', info:'var(--bluebg)', success:'var(--greenbg)' };
+
+    return recs.slice(0,8).map(r => `
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:10px;margin-bottom:8px;background:${bgs[r.level]};border-radius:8px;border-left:3px solid ${colors[r.level]}">
+            <span style="font-size:16px;flex-shrink:0">${r.icon}</span>
+            <div style="flex:1;font-size:12px;line-height:1.5">${r.text}</div>
+            ${r.action ? `<button class="btn btn-outline btn-sm" onclick="${r.action}" style="flex-shrink:0;font-size:10px">${r.actionLabel}</button>` : ''}
+        </div>`).join('');
+}
+
+// 7. Résumé alertes dans le Dashboard
+function renderDashboardAlerts() {
+    const el = document.getElementById('d-alerts-summary');
+    if (!el) return;
+    const alerts = typeof AlertEngine !== 'undefined' ? AlertEngine.compute().slice(0,4) : [];
+    if (!alerts.length) {
+        el.innerHTML = '<div style="text-align:center;padding:16px;color:var(--green);font-size:12px">✅ Aucune alerte — tout est sous contrôle</div>';
+        return;
+    }
+    const colorMap = { critical:'var(--red)', warning:'var(--orange)', info:'var(--blue)' };
+    el.innerHTML = alerts.map(a => `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+            <div style="width:8px;height:8px;border-radius:50%;background:${colorMap[a.level]||'var(--blue)'};flex-shrink:0"></div>
+            <div style="flex:1;font-size:12px"><strong>${a.title}</strong> — ${a.desc}</div>
+            <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">${a.time}</div>
+        </div>`).join('') +
+        (alerts.length >= 4 ? `<div style="text-align:center;margin-top:10px">
+            <button class="btn btn-outline btn-sm" onclick="nav('calendar',document.querySelector('[data-page=calendar]'))">
+                Voir toutes les alertes →
+            </button></div>` : '');
+}
+
+// 8. Patch renderDashboard pour injecter les alertes
+const _origRenderDashboard = typeof renderDashboard === 'function' ? renderDashboard : null;
+function renderDashboard() {
+    if (_origRenderDashboard) _origRenderDashboard();
+    setTimeout(renderDashboardAlerts, 100);
+}
+
+// 9. Bouton SWOT dans modal projet
+const _origOpenProjModal = typeof openProjModal === 'function' ? openProjModal : null;
+function openProjModal(id = null) {
+    if (_origOpenProjModal) _origOpenProjModal(id);
+    const btn = document.getElementById('btn-swot-proj');
+    if (btn) btn.style.display = id ? 'flex' : 'none';
+}
+
+// 10. Role label dans la sidebar
+const _origUpdateUserBar = typeof updateUserBar === 'function' ? updateUserBar : null;
+function updateUserBar(user) {
+    if (_origUpdateUserBar) _origUpdateUserBar(user);
+    if (!user) return;
+    const roleLabel = document.getElementById('role-label');
+    const userRoleLbl = document.getElementById('user-role-lbl');
+    const roleIcons = { admin:'👑 Admin', manager:'🎯 Manager', member:'👤 Membre' };
+    if (roleLabel) roleLabel.textContent = (roleIcons[user.role] || 'WORKSPACE');
+    if (userRoleLbl) userRoleLbl.textContent = roleIcons[user.role] || 'Se déconnecter';
+}
+
+// 11. Chips alertes dans la sidebar
+function updateChips() {
+    const active = D.workItems.filter(w => w.status === 'En cours').length;
+    const aos    = D.tenders.filter(t => !['Gagné','Perdu'].includes(t.status)).length;
+    const alerts = typeof AlertEngine !== 'undefined' ? AlertEngine.compute().filter(a => a.level === 'critical').length : 0;
+    const c1 = document.getElementById('chip-board');
+    const c2 = document.getElementById('chip-ao');
+    const c3 = document.getElementById('chip-alerts');
+    if (c1) c1.textContent = active;
+    if (c2) c2.textContent = aos;
+    if (c3) { c3.textContent = alerts; c3.style.display = alerts > 0 ? 'inline-flex' : 'none'; }
+}
+
+// 12. Recherche globale simple
+function handleSearch(val) {
+    if (!val || val.length < 2) return;
+    val = val.toLowerCase();
+    const results = [
+        ...D.projects.filter(p => p.name.toLowerCase().includes(val)).map(p => ({ type:'Projet', label:p.name, action:`openProjModal(${p.id})` })),
+        ...D.workItems.filter(w => w.title.toLowerCase().includes(val)).slice(0,3).map(w => ({ type:'Ticket', label:w.title, action:`openWIModal(${w.id})` })),
+        ...D.tenders.filter(t => (t.org||'').toLowerCase().includes(val)).map(t => ({ type:'AO', label:t.org, action:`openAOModal(${t.id})` })),
+    ].slice(0,5);
+    if (results.length) toast(`${results.length} résultat(s) pour "${val}"`, 'info', '🔍');
+}
+
+// ── FIX CLOCHE DOUBLE ─────────────────────────────────────
+// alerts_calendar.js injecte sa cloche dans #notif-anchor.
+// Si une deuxième cloche apparaît ailleurs, on la supprime.
+(function fixDoubleBell() {
+    function dedupBell() {
+        // Déplacer le notif-wrapper de alerts_calendar vers #notif-anchor si besoin
+        const anchor  = document.getElementById('notif-anchor');
+        const wrapper = document.getElementById('notif-wrapper');
+        if (anchor && wrapper && wrapper.parentElement !== anchor) {
+            anchor.appendChild(wrapper);
+        }
+        // Supprimer tout doublon
+        const all = document.querySelectorAll('.notif-wrapper');
+        if (all.length > 1) {
+            for (let i = 1; i < all.length; i++) all[i].remove();
+        }
+        // Supprimer aussi les boutons cloche orphelins hors wrapper
+        document.querySelectorAll('.notif-btn').forEach((btn, i) => {
+            if (i > 0) btn.remove();
+        });
+    }
+    // Lancer après chargement complet des scripts
+    if (document.readyState === 'complete') { dedupBell(); }
+    else { window.addEventListener('load', dedupBell); }
+    // Sécurité : relancer après 500ms au cas où alerts_calendar.js serait asynchrone
+    setTimeout(dedupBell, 500);
+})();
+</script>
+
+</body>
+</html>
