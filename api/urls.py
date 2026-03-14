@@ -21,17 +21,17 @@ urlpatterns = [
     path('auth/me/',       views.me_view,       name='me'),
 
     # Dashboard
-    path('dashboard/',     views.dashboard_view, name='dashboard'),
+    path('dashboard/', views.dashboard_view, name='dashboard'),
+
+    # ✅ ENDPOINT DÉFINITIF MEMBRES — liste directe garantie
+    path('team/',              views.team_list,   name='team-list'),
+    path('team/create/',       views.team_create, name='team-create'),
+    path('team/<int:member_id>/delete/', views.team_delete, name='team-delete'),
 
     # Gestion utilisateurs (admin)
-    path('users/',                     views.users_list_view,  name='users-list'),
-    path('users/<int:user_id>/role/',  views.update_user_role, name='user-role'),
+    path('users/',                    views.users_list_view,  name='users-list'),
+    path('users/<int:user_id>/role/', views.update_user_role, name='user-role'),
 
     # Router CRUD
     path('', include(router.urls)),
 ]
-
-# Endpoints SWOT (via le router ProjectViewSet) :
-# GET  /api/projects/{id}/swot/            → voir le SWOT
-# POST /api/projects/{id}/swot_regenerate/ → régénérer automatiquement
-# PATCH /api/projects/{id}/swot_update/   → modifier manuellement
