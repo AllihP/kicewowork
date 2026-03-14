@@ -3,11 +3,6 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none';">
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
-    <meta name="format-detection" content="telephone=no">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KICEKO ProjectHub</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
@@ -37,11 +32,11 @@
         <p style="text-align:center;color:var(--text3);margin-bottom:28px;font-size:11px;font-family:var(--mono);letter-spacing:1px">CONNECTEZ-VOUS À VOTRE ESPACE</p>
         <div class="form-group">
             <label class="form-label">Nom d'utilisateur</label>
-            <input type="text" id="login-user" class="form-input" placeholder="admin" autocomplete="username" spellcheck="false" maxlength="50">
+            <input type="text" id="login-user" class="form-input" placeholder="admin">
         </div>
         <div class="form-group">
             <label class="form-label">Mot de passe</label>
-            <input type="password" id="login-pass" class="form-input" placeholder="••••••••" autocomplete="current-password" maxlength="128">
+            <input type="password" id="login-pass" class="form-input" placeholder="••••••••">
         </div>
         <div id="login-err" style="display:none;color:var(--red);font-size:12px;margin-bottom:12px;text-align:center;padding:8px;background:var(--redbg);border-radius:6px"></div>
         <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px" onclick="doLogin()">
@@ -53,8 +48,6 @@
 <!-- ══════════════════════════════════════════════════════
      APPLICATION PRINCIPALE
      ══════════════════════════════════════════════════════ -->
-<div id="sidebar-backdrop" class="sidebar-backdrop" onclick="closeSidebar()"></div>
-
 <div id="app" class="layout" style="display:none">
 
     <!-- ── SIDEBAR ── -->
@@ -166,7 +159,6 @@
                 </div>
                 <!-- NOTIFICATION BELL — gérée par alerts_calendar.js -->
                 <!-- Le div#notif-anchor est le point d'insertion unique -->
-                <button class="search-toggle-btn" onclick="toggleSearch()" title="Rechercher" aria-label="Rechercher">🔍</button>
                 <div id="notif-anchor"></div>
                 <button class="btn btn-primary btn-sm" onclick="openAdd()">＋ Nouveau</button>
             </div>
@@ -398,10 +390,23 @@
      LOADING OVERLAY (corrigé — class-based)
      ══════════════════════════════════════════════════════ -->
 <div id="app-loading" class="app-loading-overlay">
-    <div class="app-loading-logo">KH</div>
-    <div class="app-loading-spinner"></div>
-    <div class="app-loading-title">Chargement des données…</div>
-    <div class="app-loading-sub">KICEKO ProjectHub · Veuillez patienter</div>
+    <div class="app-loading-box">
+        <div class="app-loading-logo-wrap">
+            <img src="{% static 'img/logo.png' %}" alt="KICEKO"
+                 style="width:64px;height:64px;object-fit:contain"
+                 onerror="this.style.display='none'">
+            <div class="app-loading-ring"></div>
+        </div>
+        <div class="app-loading-brand">KICEKO ProjectHub</div>
+        <div class="app-loading-step">
+            <span id="loading-step-icon">🔐</span>
+            <span id="loading-step-msg">Connexion en cours...</span>
+        </div>
+        <div class="app-loading-bar-track">
+            <div id="loading-bar-fill" class="app-loading-bar-fill"></div>
+        </div>
+        <div class="app-loading-tagline">N'Djamena · Tchad · KICEKO CONSULTANT</div>
+    </div>
 </div>
 
 <!-- ══════════════════════════════════════════════════════
@@ -417,7 +422,7 @@
         </div>
         <div class="form-group">
             <label class="form-label">Titre *</label>
-            <input type="text" id="wi-title" class="form-input" placeholder="Titre du ticket" maxlength="200" autocomplete="off">
+            <input type="text" id="wi-title" class="form-input" placeholder="Titre du ticket">
         </div>
         <div class="form-row">
             <div class="form-group">
@@ -494,7 +499,7 @@
         </div>
         <div class="form-group">
             <label class="form-label">Nom du projet *</label>
-            <input type="text" id="proj-name" class="form-input" placeholder="Nom du projet" maxlength="150" autocomplete="off">
+            <input type="text" id="proj-name" class="form-input" placeholder="Nom du projet">
         </div>
         <div class="form-group">
             <label class="form-label">Description</label>
@@ -553,7 +558,7 @@
         </div>
         <div class="form-group">
             <label class="form-label">Titre *</label>
-            <input type="text" id="ao-title" class="form-input" placeholder="Titre de l'AO" maxlength="200" autocomplete="off">
+            <input type="text" id="ao-title" class="form-input" placeholder="Titre de l'AO">
         </div>
         <div class="form-group">
             <label class="form-label">Organisation</label>
@@ -602,7 +607,7 @@
         </div>
         <div class="form-group">
             <label class="form-label">Prénom & Nom *</label>
-            <input type="text" id="mem-name" class="form-input" placeholder="Nom complet" maxlength="100" autocomplete="off">
+            <input type="text" id="mem-name" class="form-input" placeholder="Nom complet">
         </div>
         <div class="form-group">
             <label class="form-label">Rôle / Poste</label>
@@ -611,7 +616,7 @@
         <div class="form-row">
             <div class="form-group">
                 <label class="form-label">Initiales</label>
-                <input type="text" id="mem-init" class="form-input" maxlength="3" placeholder="HP" autocomplete="off">
+                <input type="text" id="mem-init" class="form-input" maxlength="3" placeholder="HP">
             </div>
             <div class="form-group">
                 <label class="form-label">Couleur avatar</label>
@@ -643,7 +648,7 @@
 <div id="toasts" class="toasts"></div>
 
 <!-- Menu Mobile -->
-<button class="menu-toggle" onclick="toggleSidebar()" aria-label="Menu" title="Ouvrir le menu">☰</button>
+<div class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</div>
 
 <!-- ══════════════════════════════════════════════════════
      SCRIPTS — ordre important
@@ -991,71 +996,6 @@ function handleSearch(val) {
     else { window.addEventListener('load', dedupBell); }
     // Sécurité : relancer après 500ms au cas où alerts_calendar.js serait asynchrone
     setTimeout(dedupBell, 500);
-})();
-</script>
-
-
-<script>
-/* ── SIDEBAR MOBILE ── */
-function toggleSidebar() {
-  const sb = document.querySelector('.sidebar');
-  const bd = document.getElementById('sidebar-backdrop');
-  if (!sb) return;
-  const isOpen = sb.classList.toggle('open');
-  if (bd) bd.classList.toggle('open', isOpen);
-  document.body.style.overflow = isOpen ? 'hidden' : '';
-}
-function closeSidebar() {
-  const sb = document.querySelector('.sidebar');
-  const bd = document.getElementById('sidebar-backdrop');
-  if (sb) sb.classList.remove('open');
-  if (bd) bd.classList.remove('open');
-  document.body.style.overflow = '';
-}
-/* Fermer sidebar sur navigation mobile */
-document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', () => {
-    if (window.innerWidth <= 960) closeSidebar();
-  });
-});
-
-/* ── SEARCH TOGGLE ── */
-function toggleSearch() {
-  const sw = document.querySelector('.search-wrap');
-  if (!sw) return;
-  const isOpen = sw.classList.toggle('open');
-  if (isOpen) {
-    const inp = sw.querySelector('input');
-    if (inp) setTimeout(() => inp.focus(), 50);
-  }
-}
-/* Fermer search au clic ailleurs */
-document.addEventListener('click', (e) => {
-  const sw = document.querySelector('.search-wrap');
-  const btn = document.querySelector('.search-toggle-btn');
-  if (sw && sw.classList.contains('open') && !sw.contains(e.target) && e.target !== btn) {
-    sw.classList.remove('open');
-  }
-});
-
-/* ── ESCAPE pour fermer modals/sidebar ── */
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    closeSidebar();
-    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
-    const sw = document.querySelector('.search-wrap');
-    if (sw) sw.classList.remove('open');
-  }
-});
-
-/* ── Swipe pour fermer sidebar ── */
-(function() {
-  let startX = 0;
-  document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
-  document.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - startX;
-    if (dx < -60) closeSidebar(); // swipe gauche = ferme
-  }, { passive: true });
 })();
 </script>
 

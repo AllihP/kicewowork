@@ -74,9 +74,17 @@ WSGI_APPLICATION = 'kiceko_hub.wsgi.application'
 DATABASES = {
     'default': dj_database_url.config(
         default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
-        conn_max_age=600,
-        conn_health_checks=True,
+        conn_max_age=60,          # ✅ Réduit à 60s pour Render Free (évite les connexions périmées)
+        conn_health_checks=True,  # ✅ Vérifie la connexion avant chaque requête
+        ssl_require=False,        # SSL géré par dj_database_url si DATABASE_URL contient sslmode
     )
+}
+
+# Cache en mémoire (évite les requêtes répétées pour les sessions)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
 }
 
 # ── Validation mots de passe ───────────────────────────
@@ -101,14 +109,15 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ── CORS ───────────────────────────────────────────────
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:8000',
-    'http://127.0.0.1:8000',
+# ── CORS — ajouter pour Render ──────────────────────────────
+CORS_ALLOW_ALL_ORIGINS = True   # En prod, mettre False et lister les origines
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept', 'accept-encoding', 'authorization',
+    'content-type', 'dnt', 'origin', 'user-agent',
+    'x-csrftoken', 'x-requested-with',
 ]
-if host := os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
-    CORS_ALLOWED_ORIGINS.append(f'https://{host}')
-CORS_ALLOW_ALL_ORIGINS = DEBUG
+ 
 
 # ── Django REST Framework ──────────────────────────────
 REST_FRAMEWORK = {

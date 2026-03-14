@@ -11,6 +11,36 @@ python manage.py migrate --no-input
 python manage.py shell << 'PYTHON'
 import os
 from django.contrib.auth.models import User
+from core.models import Member, UserProfile
+ 
+# ── Créer les profils manquants pour tous les Users ──
+for user in User.objects.all():
+    profile, created = UserProfile.objects.get_or_create(user=user)
+    if user.is_superuser and profile.role != 'admin':
+        profile.role = 'admin'
+        profile.save()
+    if created:
+        print(f"  Profil créé : {user.username} ({profile.role})")
+ 
+# ── Vérifier que les membres sont bien en base ──
+count = Member.objects.count()
+print(f"  Membres en base : {count}")
+if count == 0:
+    print("  ⚠️  Aucun membre — lancer seed_data")
+ 
+# ── Stats de vérification ──
+from core.models import Project, WorkItem, Tender
+print(f"  Projets : {Project.objects.count()}")
+print(f"  Tickets : {WorkItem.objects.count()}")
+print(f"  AO      : {Tender.objects.count()}")
+print("  ✅ Vérification DB terminée")
+PYTHON
+
+
+
+python manage.py shell << 'PYTHON'
+import os
+from django.contrib.auth.models import User
 try:
     from core.models import UserProfile
     has_profile = True
