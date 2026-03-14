@@ -1,0 +1,284 @@
+/* ═══════════════════════════════════════════════════════════════
+   KICEKO ProjectHub — fixes.css
+   Patch ciblé : Logo + Notifications
+   À inclure APRÈS style.css dans index.html
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────────────────────────────────────────────
+   FIX 1 : LOGO — Fond transparent + image cadrée correctement
+   ─────────────────────────────────────────────────────────────── */
+
+/* Conteneur principal du logo : fond transparent absolu */
+.logo-icon,
+.logo-responsive {
+    background: transparent !important;
+    border-radius: 0 !important;           /* Plus de carré arrondi parasite */
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+/* L'image du logo occupe tout l'espace disponible */
+.logo-icon img,
+.logo-responsive img,
+.logo-img {
+    width:      100%;
+    height:     100%;
+    object-fit: contain;
+    display:    block;
+    border-radius: 0;
+    background: transparent;
+}
+
+/* ── Sidebar : logo 40×40 sans fond ── */
+.sidebar .logo .logo-icon {
+    width:  40px;
+    height: 40px;
+}
+
+/* ── Écran de login : logo 72×72 centré ── */
+.login-screen .logo-icon,
+.login-screen .logo-responsive {
+    width:  72px;
+    height: 72px;
+    margin: 0 auto 12px;
+}
+
+/* ── Loading overlay : logo 50×50 ── */
+.app-loading-logo-wrap .logo-icon,
+.app-loading-logo-wrap .logo-responsive {
+    width:  50px;
+    height: 50px;
+}
+
+/* ── Fallback si l'image ne charge pas : initiales KICEKO ── */
+.logo-icon-fallback {
+    width:           100%;
+    height:          100%;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    font-size:       16px;
+    font-weight:     900;
+    font-family:     var(--mono);
+    color:           var(--accent);
+    background:      var(--accentbg);
+    border:          1.5px solid rgba(14,181,204,.25);
+    border-radius:   8px;
+    letter-spacing:  .5px;
+}
+
+/* ── Zoom doux au survol (sidebar uniquement) ── */
+.sidebar .logo:hover .logo-icon {
+    transform: scale(1.06);
+    transition: transform .15s ease;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   FIX 2 : NOTIFICATION BELL — Correction double cloche
+   + positionnement correct du dropdown panel
+   ─────────────────────────────────────────────────────────────── */
+
+/* La topbar DOIT être overflow:visible pour que le dropdown
+   absolu puisse déborder vers le bas sans être rogné */
+.topbar {
+    overflow: visible !important;
+    position: sticky;
+    z-index: 100;
+}
+
+/* Conteneur de la cloche — ancre du dropdown */
+.notif-wrapper {
+    position: relative;
+    display:  inline-flex;
+    align-items: center;
+}
+
+/* Bouton cloche */
+.notif-btn {
+    position: relative;
+    width:    36px;
+    height:   36px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all .18s ease;
+    flex-shrink: 0;
+}
+.notif-btn:hover {
+    background:    var(--card2);
+    border-color:  var(--accent);
+    transform:     scale(1.06);
+    box-shadow:    0 0 0 3px rgba(14,181,204,.12);
+}
+
+/* Point rouge d'urgence */
+.notif-dot {
+    position:  absolute;
+    top:    5px;
+    right:  5px;
+    width:  8px;
+    height: 8px;
+    background:    var(--red);
+    border-radius: 50%;
+    border: 2px solid var(--surface);
+    animation: pulseDot 2s infinite;
+    pointer-events: none;
+}
+
+/* Badge numérique */
+.notif-badge {
+    position:  absolute;
+    top:    -5px;
+    right:  -5px;
+    background:    var(--red);
+    color:         #fff;
+    font-size:     9px;
+    font-weight:   700;
+    font-family:   var(--mono);
+    padding:       1px 5px;
+    border-radius: 99px;
+    border:        2px solid var(--surface);
+    min-width:     18px;
+    text-align:    center;
+    pointer-events: none;
+    line-height:   1.6;
+}
+
+/* ── Panel dropdown ──
+   Clé : doit être position:absolute par rapport à .notif-wrapper
+   et z-index > topbar (100) pour apparaître dessus ──────────── */
+.notif-panel {
+    position:   absolute;
+    top:        calc(100% + 10px);
+    right:      0;
+    left:       auto;
+    width:      340px;
+    max-width:  calc(100vw - 24px);   /* Responsive mobile */
+    background: var(--card2);
+    border:     1px solid var(--border2);
+    border-radius: 14px;
+    box-shadow: 0 24px 64px rgba(0,0,0,.7), 0 0 0 1px rgba(14,181,204,.06);
+    z-index:    9999;    /* Au-dessus de tout */
+    opacity:    0;
+    pointer-events: none;
+    transform:  translateY(-6px) scale(.98);
+    transform-origin: top right;
+    transition: opacity .2s ease, transform .2s ease;
+    overflow:   hidden;
+
+    /* CRITIQUE : ne jamais être display:block en permanence */
+    visibility: hidden;
+}
+
+.notif-panel.open {
+    opacity:        1;
+    pointer-events: all;
+    transform:      translateY(0) scale(1);
+    visibility:     visible;
+}
+
+/* En-tête du panel */
+.notif-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(14,181,204,.07), transparent);
+}
+
+.notif-panel-title {
+    font-size:   13px;
+    font-weight: 700;
+    color:       var(--text);
+    display:     flex;
+    align-items: center;
+    gap:         6px;
+}
+
+.notif-panel-clear {
+    font-size:   10px;
+    color:       var(--text3);
+    background:  none;
+    border:      none;
+    cursor:      pointer;
+    font-family: var(--font);
+    padding:     4px 8px;
+    border-radius: 6px;
+    transition:  all .15s ease;
+}
+.notif-panel-clear:hover {
+    color:       var(--red);
+    background:  var(--redbg);
+}
+
+/* Liste des alertes */
+.notif-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Item d'alerte */
+.notif-item {
+    display:     flex;
+    align-items: flex-start;
+    gap:         10px;
+    padding:     11px 16px;
+    border-bottom: 1px solid rgba(26,48,69,.6);
+    transition:  background .12s ease;
+    cursor:      pointer;
+}
+.notif-item:last-child   { border-bottom: none; }
+.notif-item:hover        { background: var(--card); }
+.notif-item.critical     { border-left: 3px solid var(--red);    }
+.notif-item.warning      { border-left: 3px solid var(--orange); }
+.notif-item.info         { border-left: 3px solid var(--accent); }
+
+.notif-icon  { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+.notif-body  { flex: 1; min-width: 0; }
+.notif-title {
+    font-size:   12.5px;
+    font-weight: 600;
+    color:       var(--text);
+    overflow:    hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 2px;
+}
+.notif-desc {
+    font-size:   11px;
+    color:       var(--text2);
+    line-height: 1.4;
+}
+
+/* État vide */
+.notif-empty {
+    padding:    32px 16px;
+    text-align: center;
+    color:      var(--text3);
+    font-size:  12px;
+    display:    flex;
+    flex-direction: column;
+    align-items: center;
+    gap:        6px;
+}
+
+/* Pied de panel (optionnel) */
+.notif-panel-footer {
+    padding:     10px 16px;
+    border-top:  1px solid var(--border);
+    text-align:  center;
+}
+
+/* ── Responsive mobile ── */
+@media (max-width: 600px) {
+    .notif-panel {
+        right: -16px;       /* Dépasse un peu à gauche si nécessaire */
+        width: calc(100vw - 16px);
+    }
+}

@@ -1,145 +1,1216 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="KICEKO ProjectHub — Tableau de bord collaboratif · N'Djamena, Tchad">
+    <meta name="theme-color" content="#050c12">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+
     <title>KICEKO ProjectHub</title>
+
+    <link rel="icon" type="image/png" href="{% static 'img/logo.png' %}">
+
+    <!-- Polices — chargement en parallèle (jamais @import dans le CSS) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Feuilles de style — ordre strict -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/alerts_calendar.css' %}">
     <link rel="stylesheet" href="{% static 'css/calendar.css' %}">
-    <link rel="icon" type="image/png" href="{% static 'img/logo.png' %}">
+
     <style>
-        /* Surcharge teal — overrides alerts_calendar.css si elle utilise --accent gold */
-        :root {
-            --accent:    #0eb5cc !important;
-            --accent2:   #1dd4ec !important;
-            --accentbg:  rgba(14,181,204,.08) !important;
-            --accentbg2: rgba(14,181,204,.16) !important;
+    /* ═══════════════════════════════════════════════════════════════
+       KICEKO ProjectHub — Variables & Surcharges critiques
+       Inlined pour garantir la priorité sur tous les CSS externes
+       ═══════════════════════════════════════════════════════════════ */
+
+    /* ── Forcer la palette teal (surcharge alerts_calendar.css gold) ── */
+    :root {
+        color-scheme: dark;
+
+        /* Fond */
+        --bg:         #050c12;
+        --surface:    #0a1520;
+        --card:       #0f1e2d;
+        --card2:      #142535;
+        --card3:      #192d40;
+        --border:     #1a3045;
+        --border2:    #254560;
+        --border3:    rgba(14,181,204,.15);
+
+        /* Accent teal KICEKO */
+        --accent:     #0eb5cc !important;
+        --accent2:    #1dd4ec !important;
+        --accentbg:   rgba(14,181,204,.08) !important;
+        --accentbg2:  rgba(14,181,204,.16) !important;
+        --accentbg3:  rgba(14,181,204,.24);
+
+        /* Couleurs sémantiques */
+        --blue:       #3b82f6;  --bluebg:   rgba(59,130,246,.12);
+        --green:      #22c55e;  --greenbg:  rgba(34,197,94,.12);
+        --purple:     #a855f7;  --purplebg: rgba(168,85,247,.12);
+        --red:        #ef4444;  --redbg:    rgba(239,68,68,.12);
+        --orange:     #f97316;  --orangebg: rgba(249,115,22,.12);
+        --teal:       #14d4c4;  --tealbg:   rgba(20,212,196,.12);
+        --teal-deep:  #0a7a96;
+        --pink:       #ec4899;  --pinkbg:   rgba(236,72,153,.12);
+
+        /* Texte */
+        --text:       #d8eef5;
+        --text2:      #7aafc4;
+        --text3:      #4a7a90;
+        --text4:      #2d5570;
+
+        /* Typographie */
+        --font:       'Syne', sans-serif;
+        --mono:       'JetBrains Mono', monospace;
+        --radius:     10px;
+        --radius-lg:  14px;
+        --shadow:     0 8px 32px rgba(0,0,0,.6);
+        --shadow-lg:  0 20px 60px rgba(0,0,0,.7);
+
+        /* Sidebar */
+        --sidebar-w:  248px;
+        --topbar-h:   62px;
+    }
+
+    /* ── Reset ── */
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    ::placeholder { color: var(--text4); opacity:1; }
+    ::-webkit-scrollbar { width:4px; height:4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(10,122,150,.4); border-radius:4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(14,181,204,.6); }
+    :focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:4px; }
+
+    body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font);
+        min-height: 100vh;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* Fond ambiant animé */
+    body::before {
+        content:'';
+        position:fixed; inset:0;
+        pointer-events:none; z-index:0;
+        background:
+            radial-gradient(ellipse 70% 50% at 10% 0%, rgba(14,181,204,.05), transparent 60%),
+            radial-gradient(ellipse 50% 40% at 90% 90%, rgba(10,122,150,.06), transparent 60%),
+            radial-gradient(ellipse 30% 30% at 60% 40%, rgba(14,181,204,.02), transparent 70%);
+        animation: bgPulse 10s ease-in-out infinite;
+    }
+    @keyframes bgPulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    button { cursor:pointer; border:none; font-family:var(--font); transition:all .15s ease; }
+    input, select, textarea { font-family:var(--font); }
+    a { color: var(--accent); text-decoration:none; }
+
+    /* ── LAYOUT ── */
+    .layout {
+        display:flex;
+        min-height:100vh;
+        position:relative;
+        z-index:1;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+        width: var(--sidebar-w);
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top:0; left:0; height:100vh;
+        z-index: 200;
+        overflow-y: auto;
+        overflow-x: hidden;
+        transition: transform .28s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* Texture scan-line sur la sidebar */
+    .sidebar::after {
+        content:'';
+        position:absolute; inset:0;
+        pointer-events:none;
+        background: repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(14,181,204,.012) 2px,
+            rgba(14,181,204,.012) 4px
+        );
+        z-index:0;
+    }
+
+    .sidebar > * { position:relative; z-index:1; }
+
+    .main {
+        margin-left: var(--sidebar-w);
+        flex:1;
+        display:flex;
+        flex-direction:column;
+        transition: margin-left .28s cubic-bezier(.4,0,.2,1);
+        min-width:0;
+    }
+
+    /* ── LOGO ── */
+    .logo {
+        padding: 20px 18px 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        user-select: none;
+    }
+
+    .logo-img-wrap {
+        width: 38px; height: 38px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .logo-img-wrap img {
+        width: 100%; height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 0 8px rgba(14,181,204,.35));
+        transition: filter .2s ease;
+    }
+
+    .logo:hover .logo-img-wrap img {
+        filter: drop-shadow(0 0 14px rgba(14,181,204,.55));
+    }
+
+    /* Fallback si logo.png absent */
+    .logo-fallback {
+        width: 38px; height: 38px;
+        background: var(--accentbg);
+        border: 1.5px solid rgba(14,181,204,.3);
+        border-radius: 10px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 900;
+        font-family: var(--mono);
+        color: var(--accent);
+        letter-spacing: -.5px;
+    }
+
+    .logo-text { flex:1; min-width:0; }
+    .logo-name {
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: .3px;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .logo-sub {
+        font-size: 9px;
+        color: var(--accent);
+        letter-spacing: 2.5px;
+        font-family: var(--mono);
+        opacity: .75;
+        margin-top: 1px;
+    }
+    #role-label { transition: all .2s ease; }
+
+    /* ── NAVIGATION ── */
+    .nav-label {
+        font-size: 9px;
+        font-weight: 700;
+        color: var(--text4);
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        font-family: var(--mono);
+        padding: 16px 18px 6px;
+    }
+
+    .nav-section { padding: 0 10px; }
+
+    .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 10px;
+        border-radius: 9px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text2);
+        transition: all .14s ease;
+        border: 1px solid transparent;
+        margin-bottom: 1px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .nav-item::before {
+        content:'';
+        position:absolute;
+        left:0; top:0;
+        width:3px; height:100%;
+        background: var(--accent);
+        transform: scaleY(0);
+        transition: transform .15s ease;
+        border-radius: 0 2px 2px 0;
+    }
+
+    .nav-item:hover {
+        background: rgba(14,181,204,.04);
+        color: var(--text);
+        transform: translateX(3px);
+    }
+
+    .nav-item.active {
+        background: var(--accentbg);
+        color: var(--accent);
+        border-color: rgba(14,181,204,.2);
+    }
+    .nav-item.active::before { transform: scaleY(1); }
+
+    .nav-icon { font-size: 14px; width:18px; text-align:center; flex-shrink:0; }
+
+    .nav-chip {
+        margin-left: auto;
+        background: var(--red);
+        color: #fff;
+        font-size: 9px;
+        font-weight: 700;
+        padding: 1px 6px;
+        border-radius: 99px;
+        font-family: var(--mono);
+        transition: all .2s ease;
+        min-width: 18px;
+        text-align: center;
+    }
+    .nav-chip.muted { background: var(--border2); color: var(--text3); }
+
+    /* Projets récents dans sidebar */
+    .sb-proj {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all .13s ease;
+        margin-bottom: 1px;
+    }
+    .sb-proj:hover { background: var(--card); transform: translateX(2px); }
+
+    .sb-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+
+    .sb-label {
+        font-size: 12px;
+        color: var(--text2);
+        font-weight: 500;
+        flex:1;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+    }
+
+    /* ── FOOTER SIDEBAR ── */
+    .sb-footer {
+        margin-top: auto;
+        padding: 14px 12px;
+        border-top: 1px solid var(--border);
+    }
+
+    .user-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 9px;
+        cursor: pointer;
+        transition: background .13s ease;
+    }
+    .user-row:hover { background: var(--card); }
+
+    .user-av {
+        width: 32px; height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
+        font-family: var(--mono);
+        flex-shrink: 0;
+        background: var(--accentbg);
+        color: var(--accent);
+        border: 1.5px solid rgba(14,181,204,.3);
+        transition: all .15s ease;
+    }
+    .user-row:hover .user-av {
+        border-color: rgba(14,181,204,.5);
+        box-shadow: 0 0 10px rgba(14,181,204,.15);
+    }
+
+    .user-info { flex:1; min-width:0; }
+    .user-info-name {
+        font-size: 12px;
+        font-weight: 600;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+        color: var(--text);
+    }
+    .user-info-role {
+        font-size: 10px;
+        color: var(--text3);
+        margin-top: 1px;
+    }
+
+    .dot-online {
+        width:8px; height:8px;
+        border-radius:50%;
+        background: var(--green);
+        box-shadow: 0 0 6px var(--green);
+        flex-shrink:0;
+        animation: pulseDot 2.5s infinite;
+    }
+    @keyframes pulseDot { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* ── TOPBAR ── */
+    .topbar {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 0 28px;
+        height: var(--topbar-h);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top:0;
+        z-index: 100;
+        overflow: visible; /* CRITIQUE : permet au dropdown d'apparaître */
+        backdrop-filter: blur(12px);
+    }
+
+    .page-title { font-size:18px; font-weight:800; color:var(--text); letter-spacing:-.2px; }
+    .page-sub { font-size:10px; color:var(--text3); font-family:var(--mono); margin-top:2px; letter-spacing:.5px; }
+
+    .topbar-right { display:flex; align-items:center; gap:10px; }
+
+    /* ── SEARCH ── */
+    .search-wrap { position:relative; }
+
+    .search-wrap input {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: 7px 12px 7px 32px;
+        font-size: 12px;
+        color: var(--text);
+        width: 200px;
+        transition: all .18s ease;
+        outline: none;
+    }
+    .search-wrap input:focus {
+        border-color: var(--accent);
+        width: 240px;
+        box-shadow: 0 0 0 3px rgba(14,181,204,.07);
+        background: var(--card2);
+    }
+    .search-icon {
+        position:absolute; left:9px; top:50%;
+        transform:translateY(-50%);
+        font-size:12px; color:var(--text3);
+        pointer-events:none;
+    }
+
+    /* ── NOTIFICATION BELL CONTAINER ── */
+    /* alerts_calendar.js injecte .notif-wrapper dans #notif-anchor */
+    #notif-anchor {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    /* Styles que alerts_calendar.js utilisera pour sa cloche */
+    .notif-wrapper {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .notif-btn {
+        position: relative;
+        width: 36px; height: 36px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        transition: all .15s ease;
+    }
+    .notif-btn:hover {
+        background: var(--card2);
+        border-color: var(--accent);
+        transform: scale(1.06);
+        box-shadow: 0 0 0 3px rgba(14,181,204,.1);
+    }
+
+    .notif-dot {
+        position:absolute; top:5px; right:5px;
+        width:8px; height:8px;
+        background:var(--red); border-radius:50%;
+        border:2px solid var(--surface);
+        animation: pulseDot 2s infinite;
+    }
+
+    .notif-badge {
+        position:absolute; top:-5px; right:-5px;
+        background:var(--red); color:#fff;
+        font-size:9px; font-weight:700;
+        font-family:var(--mono);
+        padding:1px 5px;
+        border-radius:99px;
+        border:2px solid var(--surface);
+        min-width:18px; text-align:center;
+        line-height:1.6;
+    }
+
+    .notif-panel {
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 0;
+        width: 340px;
+        max-width: calc(100vw - 24px);
+        background: var(--card2);
+        border: 1px solid var(--border2);
+        border-radius: 14px;
+        box-shadow: var(--shadow-lg), 0 0 0 1px rgba(14,181,204,.04);
+        z-index: 9999;
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+        transform: translateY(-8px) scale(.97);
+        transform-origin: top right;
+        transition: opacity .2s ease, transform .2s ease, visibility .2s;
+        overflow: hidden;
+    }
+    .notif-panel.open {
+        opacity:1; pointer-events:all;
+        visibility:visible;
+        transform: translateY(0) scale(1);
+    }
+
+    .notif-panel-head {
+        display:flex; align-items:center; justify-content:space-between;
+        padding:14px 16px 12px;
+        border-bottom:1px solid var(--border);
+        background:linear-gradient(135deg, rgba(14,181,204,.06), transparent);
+    }
+    .notif-panel-title { font-size:13px; font-weight:700; color:var(--text); }
+    .notif-panel-clear {
+        font-size:10px; color:var(--text3);
+        background:none; border:none; cursor:pointer;
+        font-family:var(--font); padding:4px 8px;
+        border-radius:6px; transition:all .13s ease;
+    }
+    .notif-panel-clear:hover { color:var(--red); background:var(--redbg); }
+
+    .notif-list { max-height:300px; overflow-y:auto; }
+
+    .notif-item {
+        display:flex; align-items:flex-start; gap:10px;
+        padding:11px 16px;
+        border-bottom:1px solid rgba(26,48,69,.5);
+        transition:background .1s ease;
+        cursor:pointer;
+    }
+    .notif-item:last-child { border-bottom:none; }
+    .notif-item:hover { background:var(--card); }
+    .notif-item.critical { border-left:3px solid var(--red); }
+    .notif-item.warning  { border-left:3px solid var(--orange); }
+    .notif-item.info     { border-left:3px solid var(--accent); }
+
+    .notif-icon  { font-size:15px; flex-shrink:0; margin-top:1px; }
+    .notif-body  { flex:1; min-width:0; }
+    .notif-title { font-size:12.5px; font-weight:600; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:2px; }
+    .notif-desc  { font-size:11px; color:var(--text2); line-height:1.4; }
+
+    .notif-empty {
+        padding:32px 16px; text-align:center;
+        color:var(--text3); font-size:12px;
+        display:flex; flex-direction:column; align-items:center; gap:8px;
+    }
+
+    /* ── BOUTONS ── */
+    .btn {
+        display:inline-flex; align-items:center; justify-content:center; gap:6px;
+        padding:7px 15px; border-radius:9px;
+        font-size:12px; font-weight:600;
+        cursor:pointer; transition:all .15s ease;
+        border:none; font-family:var(--font);
+        text-decoration:none; white-space:nowrap;
+    }
+    .btn:disabled { opacity:.5; cursor:not-allowed; transform:none !important; }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--accent), var(--teal-deep));
+        color:#fff;
+        box-shadow: 0 3px 14px rgba(14,181,204,.28);
+    }
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--accent2), var(--accent));
+        transform:translateY(-1px);
+        box-shadow: 0 5px 20px rgba(14,181,204,.38);
+    }
+
+    .btn-outline {
+        background:transparent; color:var(--text2);
+        border:1px solid var(--border2);
+    }
+    .btn-outline:hover { background:var(--card); color:var(--accent); border-color:var(--border3); }
+
+    .btn-ghost {
+        background:var(--card); color:var(--text2); border:1px solid var(--border);
+    }
+    .btn-ghost:hover { background:var(--card2); color:var(--text); }
+
+    .btn-danger {
+        background:var(--redbg); color:var(--red); border:1px solid rgba(239,68,68,.2);
+    }
+    .btn-danger:hover { background:rgba(239,68,68,.22); }
+
+    .btn-sm  { padding:5px 11px; font-size:11px; border-radius:7px; }
+    .btn-xs  { padding:3px 8px; font-size:10px; border-radius:6px; border:1px solid var(--border2); background:transparent; color:var(--text2); }
+    .btn-xs:hover { background:var(--card); color:var(--text); }
+    .btn-full { width:100%; }
+    .btn-icon { width:34px; height:34px; padding:0; }
+
+    /* ── PAGES ── */
+    .content { padding:22px 28px; flex:1; overflow-y:auto; }
+    .page { display:none; }
+    .page.active { display:block; animation:fadeUp .22s ease; }
+
+    @keyframes fadeUp {
+        from { opacity:0; transform:translateY(10px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* ── CARDS ── */
+    .card {
+        background:var(--card); border:1px solid var(--border);
+        border-radius:var(--radius); padding:20px;
+        transition:border-color .15s ease;
+    }
+    .card:hover { border-color:var(--border2); }
+    .card-elevated { box-shadow: 0 4px 24px rgba(0,0,0,.35); }
+
+    .section-title {
+        font-size:9px; font-weight:700; color:var(--text3);
+        letter-spacing:2.5px; text-transform:uppercase;
+        font-family:var(--mono); margin-bottom:14px;
+    }
+
+    /* ── STATS GRID ── */
+    .stats-grid {
+        display:grid; grid-template-columns:repeat(4,1fr);
+        gap:14px; margin-bottom:22px;
+    }
+
+    .stat-card {
+        background:var(--card); border:1px solid var(--border);
+        border-radius:var(--radius); padding:18px 20px;
+        position:relative; overflow:hidden; cursor:pointer;
+        transition:all .15s ease;
+    }
+    .stat-card:hover { border-color:var(--border2); transform:translateY(-2px); box-shadow:0 6px 24px rgba(0,0,0,.3); }
+
+    .stat-card::before {
+        content:''; position:absolute; top:0; left:0; width:3px; height:100%;
+    }
+    .stat-card.c-accent::before { background:var(--accent); }
+    .stat-card.c-blue::before   { background:var(--blue); }
+    .stat-card.c-green::before  { background:var(--green); }
+    .stat-card.c-purple::before { background:var(--purple); }
+    .stat-card.c-orange::before { background:var(--orange); }
+
+    .stat-value { font-size:30px; font-weight:800; font-family:var(--mono); line-height:1; margin-bottom:5px; color:var(--text); }
+    .stat-label { font-size:11px; color:var(--text3); }
+    .stat-change { font-size:11px; margin-top:8px; }
+    .stat-change.up      { color:var(--green); }
+    .stat-change.down    { color:var(--red); }
+    .stat-change.neutral { color:var(--text3); }
+    .stat-icon { position:absolute; right:16px; top:50%; transform:translateY(-50%); font-size:28px; opacity:.07; }
+
+    /* ── GRIDS ── */
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+    .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+
+    /* ── BADGES ── */
+    .badge {
+        display:inline-flex; align-items:center; gap:4px;
+        padding:3px 9px; border-radius:20px;
+        font-size:10.5px; font-weight:600; white-space:nowrap;
+    }
+    .b-blue   { background:var(--bluebg);   color:var(--blue);   }
+    .b-green  { background:var(--greenbg);  color:var(--green);  }
+    .b-purple { background:var(--purplebg); color:var(--purple); }
+    .b-orange { background:var(--orangebg); color:var(--orange); }
+    .b-red    { background:var(--redbg);    color:var(--red);    }
+    .b-accent { background:var(--accentbg); color:var(--accent); }
+    .b-teal   { background:var(--tealbg);   color:var(--teal);   }
+    .b-gray   { background:rgba(74,122,144,.12); color:var(--text3); }
+
+    /* ── FORMULAIRES ── */
+    .form-group   { margin-bottom:14px; }
+    .form-label {
+        font-size:9px; font-weight:700; color:var(--text3);
+        letter-spacing:1.5px; margin-bottom:6px;
+        display:block; text-transform:uppercase; font-family:var(--mono);
+    }
+    .form-input, .form-select, .form-textarea {
+        width:100%; background:var(--surface); border:1px solid var(--border2);
+        border-radius:8px; padding:9px 12px;
+        font-size:13px; color:var(--text); outline:none;
+        transition:all .15s ease;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+        border-color:var(--accent); box-shadow:0 0 0 3px rgba(14,181,204,.08);
+        background:var(--card);
+    }
+    .form-textarea { resize:vertical; min-height:72px; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .form-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:20px; }
+
+    /* ── MODALS ── */
+    .modal-overlay {
+        position:fixed; inset:0;
+        background:rgba(0,0,0,.78);
+        backdrop-filter:blur(8px);
+        z-index:500;
+        display:flex; align-items:center; justify-content:center;
+        padding:20px;
+        opacity:0; pointer-events:none;
+        transition:opacity .2s ease;
+    }
+    .modal-overlay.open { opacity:1; pointer-events:all; }
+
+    .modal {
+        background:var(--card2); border:1px solid var(--border2);
+        border-radius:var(--radius-lg); padding:28px;
+        width:100%; max-width:520px;
+        max-height:90vh; overflow-y:auto;
+        transform:translateY(24px) scale(.98);
+        transition:transform .22s cubic-bezier(.4,0,.2,1);
+        box-shadow:var(--shadow-lg);
+    }
+    .modal-overlay.open .modal { transform:translateY(0) scale(1); }
+    .modal-wide { max-width:760px; }
+
+    .modal-title {
+        font-size:16px; font-weight:800; margin-bottom:22px;
+        display:flex; justify-content:space-between; align-items:center; gap:12px;
+    }
+    .modal-close {
+        background:none; border:none; color:var(--text3);
+        cursor:pointer; font-size:20px; line-height:1;
+        transition:all .13s ease; flex-shrink:0;
+        width:28px; height:28px; border-radius:6px;
+        display:flex; align-items:center; justify-content:center;
+    }
+    .modal-close:hover { color:var(--red); background:var(--redbg); }
+
+    /* ── FILTER BAR ── */
+    .filter-bar {
+        display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;
+        align-items:center;
+    }
+    .filter-btn {
+        padding:5px 13px; border-radius:20px;
+        border:1px solid var(--border); background:transparent;
+        color:var(--text3); font-size:11px; font-weight:600;
+        cursor:pointer; transition:all .13s ease; font-family:var(--font);
+    }
+    .filter-btn:hover { border-color:var(--border2); color:var(--text); }
+    .filter-btn.active { background:var(--accentbg); border-color:var(--border3); color:var(--accent); }
+
+    /* ── AVATAR ── */
+    .av {
+        border-radius:50%;
+        display:flex; align-items:center; justify-content:center;
+        font-weight:700; font-family:var(--mono); flex-shrink:0;
+        transition:transform .13s ease;
+    }
+    .av-stack { display:flex; }
+    .av-stack .av { margin-left:-6px; border:2px solid var(--card); }
+    .av-stack .av:first-child { margin-left:0; }
+
+    /* ── PROJET CARD ── */
+    .proj-card {
+        background:var(--card); border:1px solid var(--border);
+        border-radius:var(--radius); padding:16px 16px 14px 20px;
+        cursor:pointer; transition:all .15s ease;
+        position:relative; overflow:hidden;
+    }
+    .proj-card:hover {
+        border-color:var(--border3);
+        transform:translateY(-2px);
+        box-shadow:0 8px 32px rgba(14,181,204,.08);
+    }
+    .proj-card .left-bar { position:absolute; left:0; top:0; width:3px; height:100%; }
+    .proj-name  { font-size:13px; font-weight:700; margin-bottom:4px; }
+    .proj-desc  { font-size:11px; color:var(--text2); margin-bottom:10px; line-height:1.5; }
+    .proj-meta  { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .proj-date  { font-size:10px; color:var(--text3); font-family:var(--mono); }
+    .proj-footer { display:flex; justify-content:space-between; align-items:center; margin-top:6px; }
+    .progress-wrap { height:4px; background:var(--border); border-radius:4px; overflow:hidden; margin-bottom:8px; }
+    .progress-bar  { height:100%; border-radius:4px; background:linear-gradient(90deg, var(--teal-deep), var(--accent)); transition:width .6s ease; }
+
+    /* ── KANBAN ── */
+    .board-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+    .kanban { display:flex; gap:14px; overflow-x:auto; padding-bottom:14px; align-items:flex-start; min-height:60vh; }
+    .k-col { flex-shrink:0; width:282px; display:flex; flex-direction:column; }
+    .k-col-head { display:flex; align-items:center; gap:8px; padding:10px 12px; margin-bottom:10px; border-radius:9px; }
+    .k-col-name { font-size:12px; font-weight:700; flex:1; }
+    .k-card {
+        background:var(--card); border:1px solid var(--border);
+        border-radius:9px; padding:12px 14px; margin-bottom:8px;
+        cursor:pointer; transition:all .13s ease;
+    }
+    .k-card:hover { border-color:var(--border3); transform:translateY(-1px); box-shadow:0 4px 16px rgba(0,0,0,.25); }
+
+    /* ── TABLE AO ── */
+    .ao-table { width:100%; border-collapse:collapse; font-size:12px; }
+    .ao-table th {
+        padding:10px 14px; text-align:left;
+        background:var(--surface); color:var(--text3);
+        font-size:9px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+        font-family:var(--mono); border-bottom:1px solid var(--border);
+        white-space:nowrap;
+    }
+    .ao-table td { padding:11px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .ao-table tr:hover td { background:rgba(14,181,204,.03); }
+    .ao-table tr:last-child td { border-bottom:none; }
+
+    /* ── PIPELINE AO ── */
+    .pipeline { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+    .pipe-st {
+        display:flex; flex-direction:column; align-items:center;
+        padding:10px 16px; background:var(--card);
+        border:1px solid var(--border); border-radius:9px;
+        font-size:11px; gap:4px; cursor:pointer;
+        transition:all .13s ease; flex:1; min-width:90px;
+    }
+    .pipe-st:hover { border-color:var(--border2); }
+    .pipe-st.active { background:var(--accentbg); border-color:var(--border3); }
+    .pipe-st-count { font-size:18px; font-weight:800; font-family:var(--mono); }
+    .pipe-st-label { font-size:9px; color:var(--text3); text-transform:uppercase; letter-spacing:1.5px; font-family:var(--mono); }
+
+    /* ── EMPTY STATE ── */
+    .empty { text-align:center; padding:44px 20px; color:var(--text3); }
+    .empty-icon { font-size:36px; margin-bottom:10px; opacity:.25; }
+    .empty-text { font-size:13px; }
+
+    /* ── TOASTS ── */
+    .toasts {
+        position:fixed; bottom:22px; right:22px;
+        z-index:8000; display:flex; flex-direction:column;
+        gap:8px; pointer-events:none;
+    }
+    .toast {
+        display:flex; align-items:center; gap:10px;
+        padding:10px 16px; border-radius:10px;
+        font-size:12px; font-weight:500;
+        background:var(--card2); border:1px solid var(--border2);
+        box-shadow:0 8px 32px rgba(0,0,0,.5);
+        animation:slideInRight .25s ease, fadeOut .3s ease 3.7s forwards;
+        pointer-events:all;
+    }
+    .toast-success { border-left:3px solid var(--green); }
+    .toast-error   { border-left:3px solid var(--red); }
+    .toast-info    { border-left:3px solid var(--accent); }
+    .toast-warning { border-left:3px solid var(--orange); }
+
+    @keyframes slideInRight {
+        from { opacity:0; transform:translateX(20px); }
+        to   { opacity:1; transform:translateX(0); }
+    }
+    @keyframes fadeOut { to { opacity:0; transform:translateX(8px); } }
+
+    /* ── LOGIN SCREEN ── */
+    .login-screen {
+        position:fixed; inset:0; z-index:1000;
+        display:flex; align-items:center; justify-content:center;
+        background:
+            radial-gradient(ellipse 80% 60% at 50% -10%, rgba(14,181,204,.09), transparent 60%),
+            radial-gradient(ellipse 50% 40% at 10% 90%, rgba(10,122,150,.07), transparent 60%),
+            var(--bg);
+    }
+
+    .login-card {
+        background:var(--card); border:1px solid rgba(14,181,204,.18);
+        border-radius:18px; padding:42px 40px;
+        width:100%; max-width:400px;
+        box-shadow:0 32px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(14,181,204,.04);
+        animation:fadeUp .35s ease;
+    }
+
+    .login-logo-wrap {
+        display:flex; justify-content:center; margin-bottom:20px;
+    }
+    .login-logo-wrap img {
+        width:80px; height:80px; object-fit:contain;
+        filter:drop-shadow(0 0 20px rgba(14,181,204,.45));
+    }
+
+    .login-title {
+        text-align:center; font-size:20px; font-weight:800;
+        margin-bottom:4px; color:var(--text); letter-spacing:-.3px;
+    }
+    .login-subtitle {
+        text-align:center; font-size:10px; color:var(--text3);
+        font-family:var(--mono); letter-spacing:1.5px;
+        margin-bottom:28px; text-transform:uppercase;
+    }
+    .login-error {
+        display:none; color:var(--red); font-size:12px;
+        margin-bottom:14px; text-align:center;
+        padding:10px 12px; background:var(--redbg);
+        border-radius:8px; border:1px solid rgba(239,68,68,.2);
+        animation:fadeUp .15s ease;
+    }
+    .login-footer {
+        text-align:center; font-size:10px; color:var(--text4);
+        margin-top:22px; font-family:var(--mono); letter-spacing:.5px;
+    }
+
+    /* ── LOADING OVERLAY ── */
+    .app-loading-overlay {
+        position:fixed; inset:0; z-index:9000;
+        background:var(--bg);
+        display:none; flex-direction:column;
+        align-items:center; justify-content:center;
+    }
+    .app-loading-overlay.active { display:flex; }
+    .app-loading-overlay::before {
+        content:''; position:absolute; inset:0; pointer-events:none;
+        background:
+            radial-gradient(ellipse 60% 50% at 50% 0%, rgba(14,181,204,.07), transparent 60%),
+            radial-gradient(ellipse 40% 30% at 80% 80%, rgba(10,122,150,.05), transparent 60%);
+        animation:bgPulse 5s ease-in-out infinite;
+    }
+
+    .app-loading-box {
+        display:flex; flex-direction:column; align-items:center;
+        gap:18px; position:relative; padding:40px 48px;
+    }
+    .app-loading-logo-wrap {
+        position:relative; width:90px; height:90px;
+        display:flex; align-items:center; justify-content:center;
+    }
+    .app-loading-logo-wrap img {
+        width:64px; height:64px; object-fit:contain;
+        position:relative; z-index:1;
+        filter:drop-shadow(0 0 12px rgba(14,181,204,.4));
+    }
+
+    .app-loading-ring {
+        position:absolute; inset:-8px;
+        border:3px solid transparent;
+        border-top-color:var(--accent);
+        border-right-color:rgba(14,181,204,.2);
+        border-radius:50%;
+        animation:spinRing 1.2s linear infinite;
+    }
+    .app-loading-ring::after {
+        content:''; position:absolute; inset:5px;
+        border:2px solid transparent;
+        border-bottom-color:rgba(14,181,204,.3);
+        border-radius:50%;
+        animation:spinRing 2s linear infinite reverse;
+    }
+    @keyframes spinRing { to { transform:rotate(360deg); } }
+
+    .app-loading-brand {
+        font-size:20px; font-weight:800; letter-spacing:.3px;
+        background:linear-gradient(135deg, var(--accent), #0a7a96);
+        -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    }
+    .app-loading-step {
+        display:flex; align-items:center; gap:8px;
+        font-size:12px; color:var(--text2); font-family:var(--mono);
+        min-height:20px; animation:fadeUp .3s ease;
+    }
+    .app-loading-bar-track { width:220px; height:4px; background:var(--border); border-radius:99px; overflow:hidden; }
+    .app-loading-bar-fill  { height:100%; width:0%; background:linear-gradient(90deg, #0a7a96, var(--accent)); border-radius:99px; transition:width .5s ease; box-shadow:0 0 8px rgba(14,181,204,.4); }
+    .app-loading-tagline   { font-size:9px; color:var(--text3); font-family:var(--mono); letter-spacing:2px; text-transform:uppercase; opacity:.5; }
+    .app-loading-spinner   { width:24px; height:24px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spinRing .7s linear infinite; }
+
+    /* ── SYNC INDICATOR ── */
+    .sync-indicator {
+        display:flex; align-items:center; gap:6px;
+        padding:4px 10px; background:var(--card);
+        border:1px solid var(--border); border-radius:8px;
+        font-size:10px; font-family:var(--mono); color:var(--text3);
+    }
+    .sync-dot { width:6px; height:6px; border-radius:50%; background:var(--green); transition:background .15s ease; }
+
+    /* ── MOBILE TOGGLE ── */
+    .menu-toggle {
+        display:none; position:fixed; bottom:22px; left:22px; z-index:300;
+        width:46px; height:46px; background:var(--accent); color:#fff;
+        border-radius:12px; align-items:center; justify-content:center;
+        font-size:20px; box-shadow:0 4px 20px rgba(14,181,204,.45);
+        transition:all .15s ease;
+    }
+    .menu-toggle:hover { transform:scale(1.06); }
+
+    /* ── COMMANDE PALETTE (Cmd+K) ── */
+    .cmd-overlay {
+        position:fixed; inset:0;
+        background:rgba(0,0,0,.65);
+        backdrop-filter:blur(10px);
+        z-index:9500;
+        display:flex; align-items:flex-start; justify-content:center;
+        padding-top:15vh;
+        opacity:0; pointer-events:none; visibility:hidden;
+        transition:opacity .18s ease, visibility .18s;
+    }
+    .cmd-overlay.open {
+        opacity:1; pointer-events:all; visibility:visible;
+    }
+    .cmd-box {
+        background:var(--card2); border:1px solid var(--border2);
+        border-radius:14px; width:100%; max-width:580px;
+        box-shadow:var(--shadow-lg);
+        transform:translateY(-12px) scale(.97);
+        transition:transform .2s cubic-bezier(.4,0,.2,1);
+        overflow:hidden;
+    }
+    .cmd-overlay.open .cmd-box { transform:translateY(0) scale(1); }
+    .cmd-input-wrap { display:flex; align-items:center; gap:12px; padding:16px 18px; border-bottom:1px solid var(--border); }
+    .cmd-icon { font-size:16px; color:var(--text3); flex-shrink:0; }
+    .cmd-input {
+        flex:1; background:none; border:none; outline:none;
+        font-size:15px; font-weight:500; color:var(--text);
+        font-family:var(--font);
+    }
+    .cmd-hint { font-size:10px; color:var(--text4); font-family:var(--mono); flex-shrink:0; }
+    .cmd-results { max-height:300px; overflow-y:auto; padding:8px; }
+    .cmd-item {
+        display:flex; align-items:center; gap:12px;
+        padding:10px 12px; border-radius:8px; cursor:pointer;
+        transition:background .1s ease; font-size:13px;
+    }
+    .cmd-item:hover, .cmd-item.selected { background:var(--accentbg); color:var(--accent); }
+    .cmd-item-icon { font-size:15px; flex-shrink:0; width:20px; text-align:center; }
+    .cmd-item-label { flex:1; }
+    .cmd-item-type { font-size:10px; color:var(--text3); font-family:var(--mono); }
+    .cmd-empty { text-align:center; padding:24px; color:var(--text3); font-size:12px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 960px) {
+        .sidebar { transform:translateX(-100%); }
+        .sidebar.open { transform:translateX(0); }
+        .main { margin-left:0; }
+        .menu-toggle { display:flex; }
+        .stats-grid { grid-template-columns:1fr 1fr; }
+        .grid-2,.grid-3 { grid-template-columns:1fr; }
+        .content { padding:16px; }
+        .topbar { padding:0 16px; }
+        .search-wrap input { width:150px; }
+        .search-wrap input:focus { width:180px; }
+    }
+    @media (max-width:600px) {
+        .stats-grid { grid-template-columns:1fr; }
+        .login-card { padding:26px; margin:16px; }
+        .modal { padding:20px; max-width:95%; }
+        .form-row { grid-template-columns:1fr; }
+        .kanban { flex-direction:column; }
+        .k-col { width:100%; }
+        .pipeline { flex-wrap:wrap; }
+        .pipe-st { flex:1 1 30%; min-width:90px; }
+        .topbar { padding:0 14px; }
+    }
+
+    /* ── ACCESSIBILITÉ ── */
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration:0.01ms !important;
+            animation-iteration-count:1 !important;
+            transition-duration:0.01ms !important;
         }
+    }
+
+    /* ── UTILITAIRES ── */
+    .sep { height:1px; background:var(--border); margin:16px 0; }
+    .mt-8 { margin-top:8px; } .mt-12 { margin-top:12px; } .mt-16 { margin-top:16px; }
+    .mb-0 { margin-bottom:0; } .mb-8 { margin-bottom:8px; }
+    .row-space { display:flex; justify-content:space-between; align-items:center; }
+    .scroll-x { overflow-x:auto; }
+    .text-mono { font-family:var(--mono); }
+    .text-accent { color:var(--accent); }
+    .text-muted  { color:var(--text3); }
+    .fw-700 { font-weight:700; } .fw-800 { font-weight:800; }
     </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════
+<!-- ══════════════════════════════════════════════════════════════
      ÉCRAN DE CONNEXION
-     ══════════════════════════════════════════════════════ -->
+     ══════════════════════════════════════════════════════════════ -->
 <div id="login-screen" class="login-screen">
     <div class="login-card">
-        <div class="login-logo">
-            <img src="{% static 'img/logo.png' %}" alt="KICEKO" style="width:90px;height:90px;object-fit:contain;filter:drop-shadow(0 0 16px rgba(14,181,204,.4))">
+
+        <div class="login-logo-wrap">
+            <img src="{% static 'img/logo.png' %}" alt="KICEKO"
+                 id="login-logo-img"
+                 onerror="this.style.display='none';document.getElementById('login-logo-fb').style.display='flex'">
+            <div id="login-logo-fb" style="display:none;width:80px;height:80px;background:var(--accentbg);border:2px solid rgba(14,181,204,.3);border-radius:18px;align-items:center;justify-content:center;font-size:36px;font-weight:900;font-family:var(--mono);color:var(--accent)">K</div>
         </div>
-        <h2 style="text-align:center;margin:16px 0 4px;font-size:19px;font-weight:700;letter-spacing:.5px">KICEKO ProjectHub</h2>
-        <p style="text-align:center;color:var(--text3);margin-bottom:28px;font-size:11px;font-family:var(--mono);letter-spacing:1px">CONNECTEZ-VOUS À VOTRE ESPACE</p>
-        <div class="form-group">
-            <label class="form-label">Nom d'utilisateur</label>
-            <input type="text" id="login-user" class="form-input" placeholder="admin">
-        </div>
-        <div class="form-group">
-            <label class="form-label">Mot de passe</label>
-            <input type="password" id="login-pass" class="form-input" placeholder="••••••••">
-        </div>
-        <div id="login-err" style="display:none;color:var(--red);font-size:12px;margin-bottom:12px;text-align:center;padding:8px;background:var(--redbg);border-radius:6px"></div>
-        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px" onclick="doLogin()">
-            Se connecter →
-        </button>
+
+        <h1 class="login-title">KICEKO ProjectHub</h1>
+        <p class="login-subtitle">Connectez-vous à votre espace</p>
+
+        <!-- CORRECTION : form + csrf_token + submit correct -->
+        <form id="login-form" onsubmit="event.preventDefault(); doLogin()">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label" for="login-user">Nom d'utilisateur</label>
+                <input type="text" id="login-user" class="form-input"
+                       placeholder="admin" autocomplete="username" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="login-pass">Mot de passe</label>
+                <input type="password" id="login-pass" class="form-input"
+                       placeholder="••••••••" autocomplete="current-password" required>
+            </div>
+            <div id="login-err" class="login-error" role="alert" aria-live="polite"></div>
+            <button type="submit" id="login-btn" class="btn btn-primary btn-full" style="margin-top:6px">
+                Se connecter →
+            </button>
+        </form>
+
+        <p class="login-footer">🔐 Connexion sécurisée · Session chiffrée</p>
     </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
+
+<!-- ══════════════════════════════════════════════════════════════
      APPLICATION PRINCIPALE
-     ══════════════════════════════════════════════════════ -->
+     ══════════════════════════════════════════════════════════════ -->
 <div id="app" class="layout" style="display:none">
 
     <!-- ── SIDEBAR ── -->
-    <aside class="sidebar">
+    <aside class="sidebar" role="navigation" aria-label="Navigation principale">
+
+        <!-- Logo -->
         <div class="logo">
-            <div class="logo-icon">
-                <img src="{% static 'img/logo.png' %}" alt="K"
-                     style="width:36px;height:36px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(14,181,204,.3))">
+            <div class="logo-img-wrap">
+                <img src="{% static 'img/logo.png' %}" alt="KICEKO"
+                     id="sidebar-logo-img"
+                     onerror="this.style.display='none';document.getElementById('sidebar-logo-fb').style.display='flex'">
+                <div id="sidebar-logo-fb" class="logo-fallback">K</div>
             </div>
-            <div>
+            <div class="logo-text">
                 <div class="logo-name">KICEKO ProjectHub</div>
                 <div class="logo-sub" id="role-label">WORKSPACE</div>
             </div>
         </div>
 
-        <!-- ── Vue d'ensemble ── -->
+        <!-- Vue d'ensemble -->
         <div class="nav-label">⊞ Vue d'ensemble</div>
         <nav class="nav-section">
             <div class="nav-item active" data-page="dashboard" onclick="nav('dashboard',this)">
-                <span class="nav-icon">📊</span> Dashboard
+                <span class="nav-icon" aria-hidden="true">📊</span> Dashboard
             </div>
             <div class="nav-item" data-page="my-space" onclick="nav('my-space',this)">
-                <span class="nav-icon">🏠</span> Mon Espace
+                <span class="nav-icon" aria-hidden="true">🏠</span> Mon Espace
             </div>
         </nav>
 
-        <!-- ── Projets ── -->
+        <!-- Projets -->
         <div class="nav-label">📁 Projets</div>
         <nav class="nav-section">
             <div class="nav-item" data-page="projects" onclick="nav('projects',this)">
-                <span class="nav-icon">🗂</span> Tous les projets
+                <span class="nav-icon" aria-hidden="true">🗂</span> Tous les projets
             </div>
             <div class="nav-item" data-page="board" onclick="nav('board',this)">
-                <span class="nav-icon">📋</span> Kanban Board
-                <span id="chip-board" class="nav-chip muted">0</span>
+                <span class="nav-icon" aria-hidden="true">📋</span> Kanban Board
+                <span id="chip-board" class="nav-chip muted" aria-label="Tâches en cours">0</span>
             </div>
             <div class="nav-item" data-page="backlog" onclick="nav('backlog',this)">
-                <span class="nav-icon">≡</span> Backlogs
+                <span class="nav-icon" aria-hidden="true">≡</span> Backlogs
             </div>
             <div class="nav-item" data-page="sprints" onclick="nav('sprints',this)">
-                <span class="nav-icon">⚡</span> Sprints
+                <span class="nav-icon" aria-hidden="true">⚡</span> Sprints
             </div>
         </nav>
 
-        <!-- ── Intelligence ── -->
+        <!-- Intelligence -->
         <div class="nav-label">🧠 Intelligence</div>
         <nav class="nav-section">
             <div class="nav-item" data-page="calendar" onclick="nav('calendar',this)">
-                <span class="nav-icon">📅</span> Calendrier & Alertes
-                <span id="chip-alerts" class="nav-chip muted" style="background:var(--redbg);color:var(--red)">0</span>
+                <span class="nav-icon" aria-hidden="true">📅</span> Calendrier & Alertes
+                <span id="chip-alerts" class="nav-chip" style="background:var(--redbg);color:var(--red);display:none" aria-label="Alertes critiques">0</span>
             </div>
             <div class="nav-item" data-page="decision" onclick="nav('decision',this)">
-                <span class="nav-icon">🎯</span> Aide à la décision
+                <span class="nav-icon" aria-hidden="true">🎯</span> Aide à la décision
             </div>
         </nav>
 
-        <!-- ── Business ── -->
+        <!-- Business -->
         <div class="nav-label">💼 Business</div>
         <nav class="nav-section">
             <div class="nav-item" data-page="tenders" onclick="nav('tenders',this)">
-                <span class="nav-icon">📄</span> Appels d'offres
-                <span id="chip-ao" class="nav-chip muted">0</span>
+                <span class="nav-icon" aria-hidden="true">📄</span> Appels d'offres
+                <span id="chip-ao" class="nav-chip muted" aria-label="AO actifs">0</span>
             </div>
         </nav>
 
-        <!-- ── Équipe ── -->
+        <!-- Équipe -->
         <div class="nav-label">👥 Équipe</div>
         <nav class="nav-section">
             <div class="nav-item" data-page="team" onclick="nav('team',this)">
-                <span class="nav-icon">👥</span> Membres
+                <span class="nav-icon" aria-hidden="true">👥</span> Membres
             </div>
             <div class="nav-item" data-page="analytics" onclick="nav('analytics',this)">
-                <span class="nav-icon">📈</span> Analytics
+                <span class="nav-icon" aria-hidden="true">📈</span> Analytics
             </div>
             <div class="nav-item" data-page="users" onclick="nav('users',this)">
-                <span class="nav-icon">🔑</span> Utilisateurs
+                <span class="nav-icon" aria-hidden="true">🔑</span> Utilisateurs
             </div>
         </nav>
 
         <!-- Projets récents -->
-        <div class="nav-label" style="margin-top:8px">Projets récents</div>
+        <div class="nav-label" style="margin-top:8px">Récents</div>
         <div id="sb-projects" class="nav-section" style="padding:0 10px"></div>
 
         <!-- Footer utilisateur -->
         <div class="sb-footer">
-            <div class="user-row" onclick="doLogout()" title="Se déconnecter">
-                <div id="user-av" class="av" style="width:30px;height:30px;font-size:11px;background:var(--accentbg);color:var(--accent);border:1px solid rgba(14,181,204,.3)">HP</div>
-                <div style="font-size:12px;font-weight:500;flex:1;min-width:0">
-                    <div id="user-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Hilla Prince</div>
-                    <div id="user-role-lbl" style="font-size:10px;color:var(--text3)">Se déconnecter</div>
+            <div class="user-row" onclick="doLogout()" title="Se déconnecter"
+                 role="button" tabindex="0" aria-label="Se déconnecter">
+                <div id="user-av" class="user-av">HP</div>
+                <div class="user-info">
+                    <div id="user-name" class="user-info-name">Hilla Prince</div>
+                    <div id="user-role-lbl" class="user-info-role">Se déconnecter</div>
                 </div>
+                <div class="dot-online" aria-label="En ligne"></div>
             </div>
         </div>
     </aside>
@@ -148,52 +1219,72 @@
     <main class="main">
 
         <!-- TOPBAR -->
-        <header class="topbar">
+        <header class="topbar" role="banner">
             <div>
                 <div id="tb-title" class="page-title">Dashboard</div>
                 <div id="tb-sub" class="page-sub">KICEKO ProjectHub · Vue d'ensemble</div>
             </div>
             <div class="topbar-right">
+                <!-- Raccourci clavier Cmd+K -->
+                <button class="btn btn-ghost btn-sm" onclick="openCmdPalette()"
+                        aria-label="Ouvrir la palette de commandes (Ctrl+K)"
+                        title="Ctrl+K">
+                    <span>⌘</span> K
+                </button>
+
+                <!-- Barre de recherche -->
                 <div class="search-wrap">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="search-input" placeholder="Rechercher..." oninput="handleSearch(this.value)">
+                    <span class="search-icon" aria-hidden="true">🔍</span>
+                    <input type="search" id="search-input"
+                           placeholder="Rechercher…"
+                           oninput="handleSearch(this.value)"
+                           aria-label="Rechercher dans l'application"
+                           autocomplete="off">
                 </div>
-                <!-- NOTIFICATION BELL — gérée par alerts_calendar.js -->
-                <!-- Le div#notif-anchor est le point d'insertion unique -->
-                <div id="notif-anchor"></div>
-                <button class="btn btn-primary btn-sm" onclick="openAdd()">＋ Nouveau</button>
+
+                <!-- ═══════════════════════════════════════════════════
+                     NOTIFICATION BELL — Point d'insertion UNIQUE
+                     alerts_calendar.js injecte .notif-wrapper ici
+                     NE PAS ajouter d'autre cloche dans ce fichier
+                     ═══════════════════════════════════════════════════ -->
+                <div id="notif-anchor" role="region" aria-label="Notifications"></div>
+
+                <!-- Bouton Nouveau -->
+                <button class="btn btn-primary btn-sm" onclick="openAdd()" aria-label="Créer un nouvel élément">
+                    ＋ Nouveau
+                </button>
             </div>
         </header>
 
-        <!-- CONTENT AREA -->
+        <!-- ZONE DE CONTENU -->
         <div class="content">
 
             <!-- ══════════ DASHBOARD ══════════ -->
-            <section id="page-dashboard" class="page active">
+            <section id="page-dashboard" class="page active" aria-label="Dashboard">
                 <div class="stats-grid">
-                    <div class="stat-card c-accent" onclick="nav('board',document.querySelector('[data-page=board]'))">
+                    <div class="stat-card c-accent" onclick="nav('board',document.querySelector('[data-page=board]'))" role="button" tabindex="0">
                         <div id="s1" class="stat-value">0</div>
                         <div class="stat-label">Work Items actifs</div>
                         <div id="s1c" class="stat-change neutral">—</div>
-                        <div class="stat-icon">📋</div>
+                        <div class="stat-icon" aria-hidden="true">📋</div>
                     </div>
-                    <div class="stat-card c-blue" onclick="nav('projects',document.querySelector('[data-page=projects]'))">
+                    <div class="stat-card c-blue" onclick="nav('projects',document.querySelector('[data-page=projects]'))" role="button" tabindex="0">
                         <div id="s2" class="stat-value">0</div>
                         <div class="stat-label">Projets en cours</div>
                         <div id="s2c" class="stat-change neutral">—</div>
-                        <div class="stat-icon">📁</div>
+                        <div class="stat-icon" aria-hidden="true">📁</div>
                     </div>
-                    <div class="stat-card c-green" onclick="nav('board',document.querySelector('[data-page=board]'))">
+                    <div class="stat-card c-green" onclick="nav('board',document.querySelector('[data-page=board]'))" role="button" tabindex="0">
                         <div id="s3" class="stat-value">0</div>
                         <div class="stat-label">Tâches terminées</div>
                         <div id="s3c" class="stat-change up">↑</div>
-                        <div class="stat-icon">✅</div>
+                        <div class="stat-icon" aria-hidden="true">✅</div>
                     </div>
-                    <div class="stat-card c-purple" onclick="nav('tenders',document.querySelector('[data-page=tenders]'))">
+                    <div class="stat-card c-purple" onclick="nav('tenders',document.querySelector('[data-page=tenders]'))" role="button" tabindex="0">
                         <div id="s4" class="stat-value">0</div>
                         <div class="stat-label">AO en pipeline</div>
                         <div id="s4c" class="stat-change up">↑</div>
-                        <div class="stat-icon">📄</div>
+                        <div class="stat-icon" aria-hidden="true">📄</div>
                     </div>
                 </div>
 
@@ -202,7 +1293,10 @@
                         <div class="section-title">Projets récents</div>
                         <div id="d-projects"></div>
                         <div style="text-align:center;margin-top:12px">
-                            <button class="btn btn-outline btn-sm" onclick="nav('projects',document.querySelector('[data-page=projects]'))">Voir tout →</button>
+                            <button class="btn btn-outline btn-sm"
+                                    onclick="nav('projects',document.querySelector('[data-page=projects]'))">
+                                Voir tout →
+                            </button>
                         </div>
                     </div>
                     <div class="card">
@@ -211,7 +1305,7 @@
                     </div>
                 </div>
 
-                <div class="grid-2" style="margin-top:16px">
+                <div class="grid-2 mt-16">
                     <div class="card">
                         <div class="section-title">Tickets par statut</div>
                         <div id="d-wi-chart"></div>
@@ -222,32 +1316,32 @@
                     </div>
                 </div>
 
-                <!-- ALERTES CRITIQUES dans le Dashboard -->
-                <div class="card" style="margin-top:16px;border-color:rgba(239,68,68,.2)">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                <div class="card mt-16" style="border-color:rgba(239,68,68,.15)">
+                    <div class="row-space mb-8">
                         <div class="section-title" style="margin:0">🚨 Alertes & Risques</div>
-                        <button class="btn btn-outline btn-sm" onclick="nav('calendar',document.querySelector('[data-page=calendar]'))">
+                        <button class="btn btn-outline btn-sm"
+                                onclick="nav('calendar',document.querySelector('[data-page=calendar]'))">
                             Voir le calendrier →
                         </button>
                     </div>
                     <div id="d-alerts-summary"></div>
                 </div>
 
-                <div class="card" style="margin-top:16px">
+                <div class="card mt-16">
                     <div class="section-title">Pipeline AO</div>
                     <div id="d-ao-quick"></div>
                 </div>
             </section>
 
             <!-- ══════════ MON ESPACE ══════════ -->
-            <section id="page-my-space" class="page">
+            <section id="page-my-space" class="page" aria-label="Mon Espace">
                 <div id="my-space-content">
-                    <div style="text-align:center;padding:40px;color:var(--text3)">Chargement...</div>
+                    <div class="empty"><div class="app-loading-spinner" style="margin:0 auto 16px"></div>Chargement...</div>
                 </div>
             </section>
 
             <!-- ══════════ PROJETS ══════════ -->
-            <section id="page-projects" class="page">
+            <section id="page-projects" class="page" aria-label="Projets">
                 <div class="filter-bar" id="proj-filters">
                     <button class="filter-btn active" onclick="filterProj('',this)">Tous</button>
                     <button class="filter-btn" onclick="filterProj('En cours',this)">En cours</button>
@@ -255,17 +1349,17 @@
                     <button class="filter-btn" onclick="filterProj('En attente',this)">En attente</button>
                     <button class="filter-btn" onclick="filterProj('Terminé',this)">Terminé</button>
                 </div>
-                <div style="font-size:11px;color:var(--text3);margin-bottom:12px" id="proj-count-lbl"></div>
+                <div id="proj-count-lbl" class="text-muted" style="font-size:11px;margin-bottom:12px;font-family:var(--mono)"></div>
                 <div id="proj-grid" class="grid-3"></div>
             </section>
 
             <!-- ══════════ KANBAN BOARD ══════════ -->
-            <section id="page-board" class="page">
+            <section id="page-board" class="page" aria-label="Kanban Board">
                 <div class="board-toolbar">
-                    <select id="board-proj-sel" class="sel" onchange="renderBoard()">
+                    <select id="board-proj-sel" class="form-select" style="width:auto" onchange="renderBoard()">
                         <option value="">Tous les projets</option>
                     </select>
-                    <div id="board-type-filters" class="filter-bar">
+                    <div id="board-type-filters" class="filter-bar mb-0">
                         <button class="filter-btn active" onclick="setBoardFilter('',this)">Tout</button>
                         <button class="filter-btn" onclick="setBoardFilter('epic',this)">Epic</button>
                         <button class="filter-btn" onclick="setBoardFilter('feature',this)">Feature</button>
@@ -279,9 +1373,9 @@
             </section>
 
             <!-- ══════════ BACKLOG ══════════ -->
-            <section id="page-backlog" class="page">
-                <div style="margin-bottom:16px;display:flex;gap:10px;align-items:center">
-                    <select id="bl-proj-sel" class="sel" onchange="renderBacklog()">
+            <section id="page-backlog" class="page" aria-label="Product Backlog">
+                <div class="row-space mb-16">
+                    <select id="bl-proj-sel" class="form-select" style="width:auto" onchange="renderBacklog()">
                         <option value="">Tous les projets</option>
                     </select>
                     <button class="btn btn-primary btn-sm" onclick="openWIModal()">＋ Ajouter</button>
@@ -290,35 +1384,38 @@
             </section>
 
             <!-- ══════════ SPRINTS ══════════ -->
-            <section id="page-sprints" class="page">
-                <div style="margin-bottom:16px">
-                    <button class="btn btn-primary btn-sm" onclick="toast('Création de sprint à venir','info','⚡')">＋ Nouveau sprint</button>
+            <section id="page-sprints" class="page" aria-label="Sprints">
+                <div class="mb-16">
+                    <button class="btn btn-primary btn-sm"
+                            onclick="typeof toast!=='undefined'&&toast('Création de sprint à venir','info','⚡')">
+                        ＋ Nouveau sprint
+                    </button>
                 </div>
                 <div id="sprints-list"></div>
             </section>
 
             <!-- ══════════ CALENDRIER & ALERTES ══════════ -->
-            <section id="page-calendar" class="page">
+            <section id="page-calendar" class="page" aria-label="Calendrier et Alertes">
                 <div id="cal-main-wrapper">
-                    <div style="text-align:center;padding:60px;color:var(--text3)">
+                    <div class="empty">
                         <div class="app-loading-spinner" style="margin:0 auto 16px"></div>
-                        Chargement du calendrier...
+                        Chargement du calendrier…
                     </div>
                 </div>
             </section>
 
             <!-- ══════════ AIDE À LA DÉCISION ══════════ -->
-            <section id="page-decision" class="page">
+            <section id="page-decision" class="page" aria-label="Aide à la décision">
                 <div id="decision-content">
-                    <div style="text-align:center;padding:40px;color:var(--text3)">Chargement...</div>
+                    <div class="empty"><div class="app-loading-spinner" style="margin:0 auto 16px"></div>Chargement...</div>
                 </div>
             </section>
 
             <!-- ══════════ APPELS D'OFFRES ══════════ -->
-            <section id="page-tenders" class="page">
+            <section id="page-tenders" class="page" aria-label="Appels d'offres">
                 <div id="ao-pipeline" class="pipeline"></div>
-                <div style="margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-                    <select id="ao-filter-sel" class="sel" onchange="renderTenders()">
+                <div class="row-space mb-16">
+                    <select id="ao-filter-sel" class="form-select" style="width:auto" onchange="renderTenders()">
                         <option value="">Tous les AO</option>
                         <option value="Détection">Détection</option>
                         <option value="Qualification">Qualification</option>
@@ -329,17 +1426,12 @@
                     </select>
                     <button class="btn btn-primary btn-sm" onclick="openAOModal()">＋ Nouvel AO</button>
                 </div>
-                <div style="overflow-x:auto">
+                <div class="scroll-x">
                     <table class="ao-table">
                         <thead>
                             <tr>
-                                <th>Organisation</th>
-                                <th>Titre</th>
-                                <th>Montant (FCFA)</th>
-                                <th>Deadline</th>
-                                <th>Statut</th>
-                                <th>Responsable</th>
-                                <th>Actions</th>
+                                <th>Organisation</th><th>Titre</th><th>Montant (FCFA)</th>
+                                <th>Deadline</th><th>Statut</th><th>Responsable</th><th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="ao-tbody"></tbody>
@@ -348,17 +1440,17 @@
             </section>
 
             <!-- ══════════ ÉQUIPE ══════════ -->
-            <section id="page-team" class="page">
-                <div style="margin-bottom:16px">
+            <section id="page-team" class="page" aria-label="Équipe">
+                <div class="mb-16">
                     <button class="btn btn-primary btn-sm" onclick="om('modal-member')">＋ Nouveau membre</button>
                 </div>
                 <div id="team-grid" class="grid-3"></div>
             </section>
 
             <!-- ══════════ ANALYTICS ══════════ -->
-            <section id="page-analytics" class="page">
+            <section id="page-analytics" class="page" aria-label="Analytics">
                 <div class="section-title">Avancement des projets</div>
-                <div id="an-progress" style="margin-bottom:22px"></div>
+                <div id="an-progress" class="mb-16"></div>
                 <div class="grid-2">
                     <div class="card">
                         <div class="section-title">Work Items par priorité</div>
@@ -369,7 +1461,7 @@
                         <div id="an-velocity"></div>
                     </div>
                 </div>
-                <div class="card" style="margin-top:16px">
+                <div class="card mt-16">
                     <div class="section-title">KPIs & Métriques</div>
                     <div id="an-stats" class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin:0"></div>
                     <div id="an-kpis"></div>
@@ -377,26 +1469,30 @@
             </section>
 
             <!-- ══════════ UTILISATEURS (Admin) ══════════ -->
-            <section id="page-users" class="page">
+            <section id="page-users" class="page" aria-label="Gestion des utilisateurs">
                 <div id="users-content">
-                    <div style="text-align:center;padding:40px;color:var(--text3)">Chargement...</div>
+                    <div class="empty"><div class="app-loading-spinner" style="margin:0 auto 16px"></div>Chargement...</div>
                 </div>
             </section>
 
         </div><!-- /content -->
     </main>
+
+    <!-- Menu mobile -->
+    <button class="menu-toggle"
+            onclick="document.querySelector('.sidebar').classList.toggle('open')"
+            aria-label="Ouvrir/fermer le menu">☰</button>
 </div><!-- /app -->
 
-<!-- ══════════════════════════════════════════════════════
-     LOADING OVERLAY (corrigé — class-based)
-     ══════════════════════════════════════════════════════ -->
-<div id="app-loading" class="app-loading-overlay">
+
+<!-- ══════════════════════════════════════════════════════════════
+     LOADING OVERLAY
+     ══════════════════════════════════════════════════════════════ -->
+<div id="app-loading" class="app-loading-overlay" role="status" aria-live="polite">
     <div class="app-loading-box">
         <div class="app-loading-logo-wrap">
-            <img src="{% static 'img/logo.png' %}" alt="KICEKO"
-                 style="width:64px;height:64px;object-fit:contain"
-                 onerror="this.style.display='none'">
             <div class="app-loading-ring"></div>
+            <img src="{% static 'img/logo.png' %}" alt="KICEKO" onerror="this.style.display='none'">
         </div>
         <div class="app-loading-brand">KICEKO ProjectHub</div>
         <div class="app-loading-step">
@@ -410,34 +1506,53 @@
     </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
+
+<!-- ══════════════════════════════════════════════════════════════
+     COMMANDE PALETTE (Ctrl+K) — Innovation
+     ══════════════════════════════════════════════════════════════ -->
+<div id="cmd-overlay" class="cmd-overlay" role="dialog" aria-modal="true" aria-label="Palette de commandes"
+     onclick="if(event.target===this)closeCmdPalette()">
+    <div class="cmd-box">
+        <div class="cmd-input-wrap">
+            <span class="cmd-icon">⌘</span>
+            <input type="search" id="cmd-input" class="cmd-input"
+                   placeholder="Naviguer, chercher, créer…"
+                   oninput="updateCmdResults(this.value)"
+                   onkeydown="handleCmdKey(event)"
+                   autocomplete="off">
+            <span class="cmd-hint">ESC pour fermer</span>
+        </div>
+        <div id="cmd-results" class="cmd-results"></div>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
      MODALS
-     ══════════════════════════════════════════════════════ -->
+     ══════════════════════════════════════════════════════════════ -->
 
 <!-- Modal Work Item -->
-<div id="modal-wi" class="modal-overlay">
+<div id="modal-wi" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="mwi-label">
     <div class="modal">
         <div class="modal-title">
             <span id="mwi-label">Nouveau Ticket</span>
-            <button class="modal-close" onclick="cm('modal-wi')">×</button>
+            <button class="modal-close" onclick="cm('modal-wi')" aria-label="Fermer">×</button>
         </div>
         <div class="form-group">
-            <label class="form-label">Titre *</label>
-            <input type="text" id="wi-title" class="form-input" placeholder="Titre du ticket">
+            <label class="form-label" for="wi-title">Titre *</label>
+            <input type="text" id="wi-title" class="form-input" placeholder="Titre du ticket" required>
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Type</label>
+                <label class="form-label" for="wi-type">Type</label>
                 <select id="wi-type" class="form-select">
-                    <option value="epic">🏔 Epic</option>
-                    <option value="feature">⭐ Feature</option>
-                    <option value="story">📖 User Story</option>
-                    <option value="task" selected>✅ Task</option>
+                    <option value="epic">🏔 Epic</option><option value="feature">⭐ Feature</option>
+                    <option value="story">📖 User Story</option><option value="task" selected>✅ Task</option>
                     <option value="bug">🐛 Bug</option>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Priorité</label>
+                <label class="form-label" for="wi-prio">Priorité</label>
                 <select id="wi-prio" class="form-select">
                     <option value="Haute">🔴 Haute</option>
                     <option value="Moyenne" selected>🟠 Moyenne</option>
@@ -447,41 +1562,38 @@
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Statut</label>
+                <label class="form-label" for="wi-status">Statut</label>
                 <select id="wi-status" class="form-select">
-                    <option value="Backlog">Backlog</option>
-                    <option value="A faire">À faire</option>
-                    <option value="En cours">En cours</option>
-                    <option value="Review">Review</option>
+                    <option value="Backlog">Backlog</option><option value="A faire">À faire</option>
+                    <option value="En cours">En cours</option><option value="Review">Review</option>
                     <option value="Terminé">Terminé</option>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Story Points</label>
+                <label class="form-label" for="wi-pts">Story Points</label>
                 <select id="wi-pts" class="form-select">
-                    <option value="1">1</option><option value="2">2</option>
-                    <option value="3">3</option><option value="5" selected>5</option>
-                    <option value="8">8</option><option value="13">13</option>
-                    <option value="21">21</option>
+                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                    <option value="5" selected>5</option><option value="8">8</option>
+                    <option value="13">13</option><option value="21">21</option>
                 </select>
             </div>
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Assigné à</label>
+                <label class="form-label" for="wi-assignee">Assigné à</label>
                 <select id="wi-assignee" class="form-select"></select>
             </div>
             <div class="form-group">
-                <label class="form-label">Projet</label>
+                <label class="form-label" for="wi-project">Projet</label>
                 <select id="wi-project" class="form-select"></select>
             </div>
         </div>
         <div class="form-group">
-            <label class="form-label">Échéance</label>
+            <label class="form-label" for="wi-due">Échéance</label>
             <input type="date" id="wi-due" class="form-input">
         </div>
         <div class="form-group">
-            <label class="form-label">Description</label>
+            <label class="form-label" for="wi-desc">Description</label>
             <textarea id="wi-desc" class="form-textarea" placeholder="Description détaillée..."></textarea>
         </div>
         <div class="form-actions">
@@ -492,103 +1604,99 @@
 </div>
 
 <!-- Modal Projet -->
-<div id="modal-proj" class="modal-overlay">
+<div id="modal-proj" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="mproj-label">
     <div class="modal">
         <div class="modal-title">
             <span id="mproj-label">Nouveau Projet</span>
-            <button class="modal-close" onclick="cm('modal-proj')">×</button>
+            <button class="modal-close" onclick="cm('modal-proj')" aria-label="Fermer">×</button>
         </div>
         <div class="form-group">
-            <label class="form-label">Nom du projet *</label>
-            <input type="text" id="proj-name" class="form-input" placeholder="Nom du projet">
+            <label class="form-label" for="proj-name">Nom du projet *</label>
+            <input type="text" id="proj-name" class="form-input" placeholder="Nom du projet" required>
         </div>
         <div class="form-group">
-            <label class="form-label">Description</label>
+            <label class="form-label" for="proj-desc">Description</label>
             <textarea id="proj-desc" class="form-textarea" placeholder="Description..."></textarea>
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Catégorie</label>
+                <label class="form-label" for="proj-cat">Catégorie</label>
                 <select id="proj-cat" class="form-select">
-                    <option value="IT">IT / Dev</option>
-                    <option value="GIS">SIG / Cartographie</option>
-                    <option value="AO">Appel d'offres</option>
-                    <option value="Interne">Interne</option>
+                    <option value="IT">IT / Dev</option><option value="GIS">SIG / Cartographie</option>
+                    <option value="AO">Appel d'offres</option><option value="Interne">Interne</option>
                     <option value="Partenariat">Partenariat</option>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Statut</label>
+                <label class="form-label" for="proj-status">Statut</label>
                 <select id="proj-status" class="form-select">
-                    <option value="Planifié">Planifié</option>
-                    <option value="En cours">En cours</option>
-                    <option value="En attente">En attente</option>
-                    <option value="Bloqué">Bloqué</option>
+                    <option value="Planifié">Planifié</option><option value="En cours">En cours</option>
+                    <option value="En attente">En attente</option><option value="Bloqué">Bloqué</option>
                     <option value="Terminé">Terminé</option>
                 </select>
             </div>
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Progression (%)</label>
+                <label class="form-label" for="proj-progress">Progression (%)</label>
                 <input type="number" id="proj-progress" class="form-input" value="0" min="0" max="100">
             </div>
             <div class="form-group">
-                <label class="form-label">Deadline</label>
+                <label class="form-label" for="proj-deadline">Deadline</label>
                 <input type="date" id="proj-deadline" class="form-input">
             </div>
         </div>
         <div class="form-group">
-            <label class="form-label">Membres</label>
+            <label class="form-label" for="proj-members">Membres</label>
             <select id="proj-members" class="form-select" multiple size="4"></select>
         </div>
         <div class="form-actions">
             <button class="btn btn-ghost" onclick="cm('modal-proj')">Annuler</button>
-            <button class="btn btn-outline" onclick="if(editProjId)openSWOT(editProjId)" id="btn-swot-proj" style="display:none">🧠 SWOT</button>
+            <button class="btn btn-outline" id="btn-swot-proj" style="display:none"
+                    onclick="if(typeof editProjId!=='undefined'&&editProjId)openSWOT(editProjId)">
+                🧠 SWOT
+            </button>
             <button class="btn btn-primary" onclick="saveProj()">Enregistrer</button>
         </div>
     </div>
 </div>
 
 <!-- Modal AO -->
-<div id="modal-ao" class="modal-overlay">
+<div id="modal-ao" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="mao-label">
     <div class="modal">
         <div class="modal-title">
-            <span>Appel d'offres</span>
-            <button class="modal-close" onclick="cm('modal-ao')">×</button>
+            <span id="mao-label">Appel d'offres</span>
+            <button class="modal-close" onclick="cm('modal-ao')" aria-label="Fermer">×</button>
         </div>
         <div class="form-group">
-            <label class="form-label">Titre *</label>
-            <input type="text" id="ao-title" class="form-input" placeholder="Titre de l'AO">
+            <label class="form-label" for="ao-title">Titre *</label>
+            <input type="text" id="ao-title" class="form-input" placeholder="Titre de l'AO" required>
         </div>
         <div class="form-group">
-            <label class="form-label">Organisation</label>
+            <label class="form-label" for="ao-org">Organisation</label>
             <input type="text" id="ao-org" class="form-input" placeholder="Organisation">
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Montant (FCFA)</label>
+                <label class="form-label" for="ao-amount">Montant (FCFA)</label>
                 <input type="number" id="ao-amount" class="form-input" value="0">
             </div>
             <div class="form-group">
-                <label class="form-label">Deadline</label>
+                <label class="form-label" for="ao-deadline">Deadline</label>
                 <input type="date" id="ao-deadline" class="form-input">
             </div>
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Statut</label>
+                <label class="form-label" for="ao-status">Statut</label>
                 <select id="ao-status" class="form-select">
-                    <option value="Détection">Détection</option>
-                    <option value="Qualification">Qualification</option>
-                    <option value="Préparation">Préparation</option>
-                    <option value="Soumis">Soumis</option>
-                    <option value="Gagné">Gagné</option>
-                    <option value="Perdu">Perdu</option>
+                    <option value="Détection">Détection</option><option value="Qualification">Qualification</option>
+                    <option value="Préparation">Préparation</option><option value="Soumis">Soumis</option>
+                    <option value="Gagné">Gagné</option><option value="Perdu">Perdu</option>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Responsable</label>
+                <label class="form-label" for="ao-lead">Responsable</label>
                 <select id="ao-lead" class="form-select"></select>
             </div>
         </div>
@@ -600,28 +1708,29 @@
 </div>
 
 <!-- Modal Membre -->
-<div id="modal-member" class="modal-overlay">
+<div id="modal-member" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="mmem-label">
     <div class="modal">
         <div class="modal-title">
-            <span>Nouveau Membre</span>
-            <button class="modal-close" onclick="cm('modal-member')">×</button>
+            <span id="mmem-label">Nouveau Membre</span>
+            <button class="modal-close" onclick="cm('modal-member')" aria-label="Fermer">×</button>
         </div>
         <div class="form-group">
-            <label class="form-label">Prénom & Nom *</label>
-            <input type="text" id="mem-name" class="form-input" placeholder="Nom complet">
+            <label class="form-label" for="mem-name">Prénom & Nom *</label>
+            <input type="text" id="mem-name" class="form-input" placeholder="Nom complet" required>
         </div>
         <div class="form-group">
-            <label class="form-label">Rôle / Poste</label>
+            <label class="form-label" for="mem-role">Rôle / Poste</label>
             <input type="text" id="mem-role" class="form-input" placeholder="Développeur, Chef de projet...">
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Initiales</label>
+                <label class="form-label" for="mem-init">Initiales</label>
                 <input type="text" id="mem-init" class="form-input" maxlength="3" placeholder="HP">
             </div>
             <div class="form-group">
-                <label class="form-label">Couleur avatar</label>
-                <input type="color" id="mem-color" class="form-input" value="#e8a020" style="height:42px;padding:4px">
+                <label class="form-label" for="mem-color">Couleur avatar</label>
+                <input type="color" id="mem-color" class="form-input" value="#0eb5cc"
+                       style="height:42px;padding:4px;cursor:pointer">
             </div>
         </div>
         <div class="form-actions">
@@ -631,127 +1740,145 @@
     </div>
 </div>
 
-<!-- Modal SWOT (dynamique — géré par rbac_swot.js) -->
-<div id="modal-swot" class="modal-overlay" style="z-index:600">
-    <div class="modal" style="max-width:780px;width:100%">
-        <div id="swot-content">Chargement...</div>
+<!-- Modal SWOT -->
+<div id="modal-swot" class="modal-overlay" role="dialog" aria-modal="true" style="z-index:600">
+    <div class="modal modal-wide">
+        <div id="swot-content">
+            <div class="empty"><div class="app-loading-spinner" style="margin:0 auto 16px"></div>Chargement...</div>
+        </div>
     </div>
 </div>
 
 <!-- Modal Événement Calendrier -->
-<div id="evt-modal" class="evt-modal-overlay" onclick="closeEvtModal(event)">
+<div id="evt-modal" class="evt-modal-overlay" onclick="if(typeof closeEvtModal==='function')closeEvtModal(event)">
     <div class="evt-modal">
         <div id="evt-modal-content"></div>
     </div>
 </div>
 
 <!-- Toasts -->
-<div id="toasts" class="toasts"></div>
+<div id="toasts" class="toasts" role="region" aria-label="Notifications" aria-live="assertive"></div>
 
-<!-- Menu Mobile -->
-<div class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</div>
 
-<!-- ══════════════════════════════════════════════════════
-     SCRIPTS — ordre important
-     ══════════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════════════════
+     SCRIPTS — ORDRE CRITIQUE
+     ─────────────────────────────────────────────────────────────
+     RÈGLE : TOUJOURS charger les fichiers JS en premier.
+     Le bloc <script> inline s'exécute EN DERNIER pour garantir
+     que toutes les fonctions (D, renderDashboard, etc.) existent.
+     ══════════════════════════════════════════════════════════════ -->
 <script src="{% static 'js/app.js' %}"></script>
 <script src="{% static 'js/alerts_calendar.js' %}"></script>
 <script src="{% static 'js/rbac_swot.js' %}"></script>
+<script src="{% static 'js/calendar_fix.js' %}"></script>
+<script src="{% static 'js/members_final.js' %}"></script>
 
+<!-- INTÉGRATION — après le chargement de tous les JS externes -->
 <script>
-// ── Patches d'intégration ──────────────────────────────
+(function integration() {
+    'use strict';
 
-// 1. PAGE_TITLES et PAGE_SUBS pour les nouvelles pages
-Object.assign(PAGE_TITLES, {
-    'my-space':  'Mon Espace',
-    'calendar':  'Calendrier & Alertes',
-    'decision':  'Aide à la décision',
-    'users':     'Gestion Utilisateurs',
-});
-Object.assign(PAGE_SUBS, {
-    'my-space':  'Mes projets et tâches assignées',
-    'calendar':  'Deadlines · Risques · Timeline Gantt',
-    'decision':  'Analyse SWOT · Scores de risque · Recommandations',
-    'users':     'Rôles & accès · Administration',
-});
-
-// 2. Enregistrer les renderers pour les nouvelles pages
-const _origRenderPage2 = renderPage;
-function renderPage(page) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    const pg = document.getElementById('page-' + page);
-    if (pg) pg.classList.add('active');
-
-    const extraRenderers = {
-        'my-space': renderMySpacePage,
-        'calendar': renderCalendarPage,
-        'decision': renderDecisionPage,
-        'users':    renderUsersPage,
-    };
-    if (extraRenderers[page]) {
-        extraRenderers[page]();
-    } else {
-        _origRenderPage2(page);
+    /* ═══════════════════════════════════════════════════════════
+       1. PAGE TITLES & SUBS
+       ═══════════════════════════════════════════════════════════ */
+    if (typeof PAGE_TITLES !== 'undefined') {
+        Object.assign(PAGE_TITLES, {
+            'my-space': 'Mon Espace',
+            'calendar': 'Calendrier & Alertes',
+            'decision': 'Aide à la décision',
+            'users':    'Gestion Utilisateurs',
+        });
     }
-}
+    if (typeof PAGE_SUBS !== 'undefined') {
+        Object.assign(PAGE_SUBS, {
+            'my-space': 'Mes projets et tâches assignées',
+            'calendar': 'Deadlines · Risques · Timeline Gantt',
+            'decision': 'Analyse SWOT · Scores de risque · Recommandations',
+            'users':    'Rôles & accès · Administration',
+        });
+    }
 
-// 3. renderCalendarPage — wrappeur qui appelle alerts_calendar.js
-function renderCalendarPage() {
-    const wrapper = document.getElementById('cal-main-wrapper');
-    if (wrapper) wrapper.innerHTML = '';
-    if (typeof renderCalendar === 'function') renderCalendar();
-}
+    /* ═══════════════════════════════════════════════════════════
+       2. OVERRIDE renderPage — ajoute les pages supplémentaires
+       ═══════════════════════════════════════════════════════════ */
+    const _origRenderPage = typeof renderPage === 'function' ? renderPage.bind(window) : null;
 
-// 4. renderMySpacePage — wrappeur pour rbac_swot.js
-function renderMySpacePage() {
-    if (typeof renderMySpace === 'function') renderMySpace();
-}
+    window.renderPage = function(page) {
+        // Masquer toutes les pages
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        const pg = document.getElementById('page-' + page);
+        if (pg) pg.classList.add('active');
 
-// 5. renderUsersPage — wrappeur pour rbac_swot.js
-function renderUsersPage() {
-    const pg = document.getElementById('users-content');
-    if (pg) pg.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3)">Chargement...</div>';
-    if (typeof renderUsersAdmin === 'function') renderUsersAdmin();
-}
+        // Pages gérées par les modules externes
+        const extraRenderers = {
+            'my-space': renderMySpacePage,
+            'calendar': renderCalendarPage,
+            'decision': renderDecisionPage,
+            'users':    renderUsersPage,
+        };
 
-// 6. renderDecisionPage — Aide à la décision intelligente
-function renderDecisionPage() {
-    const pg = document.getElementById('decision-content');
-    if (!pg) return;
+        if (extraRenderers[page]) {
+            extraRenderers[page]();
+        } else if (_origRenderPage) {
+            _origRenderPage(page);
+        }
+    };
 
-    const alerts = typeof AlertEngine !== 'undefined' ? AlertEngine.compute() : [];
-    const critical = alerts.filter(a => a.level === 'critical');
-    const riskProjects = D.projects
-        .filter(p => p.status !== 'Terminé')
-        .map(p => {
-            const score = typeof AlertEngine !== 'undefined' ? AlertEngine.riskScore(p) : { score: 0, color: 'var(--text3)', factors: [] };
-            return { ...p, _risk: score };
-        })
-        .sort((a, b) => b._risk.score - a._risk.score)
-        .slice(0, 6);
+    /* ═══════════════════════════════════════════════════════════
+       3. RENDERERS DES PAGES SUPPLÉMENTAIRES
+       ═══════════════════════════════════════════════════════════ */
+    window.renderCalendarPage = function() {
+        const wrapper = document.getElementById('cal-main-wrapper');
+        if (wrapper) wrapper.innerHTML = '';
+        if (typeof renderCalendar === 'function') renderCalendar();
+    };
 
-    const totalAO     = D.tenders.length;
-    const wonAO       = D.tenders.filter(t => t.status === 'Gagné').length;
-    const winRate     = totalAO ? Math.round(wonAO / totalAO * 100) : 0;
-    const pendingAO   = D.tenders.filter(t => !['Gagné','Perdu'].includes(t.status)).length;
-    const totalBudget = D.tenders.reduce((s, t) => s + (t.amount || 0), 0);
+    window.renderMySpacePage = function() {
+        if (typeof renderMySpace === 'function') renderMySpace();
+    };
 
-    pg.innerHTML = `
-        <!-- En-tête -->
-        <div style="margin-bottom:24px;padding:18px 20px;background:linear-gradient(135deg,rgba(232,160,32,.08),var(--card));border:1px solid rgba(232,160,32,.2);border-radius:var(--radius);display:flex;align-items:center;gap:16px">
+    window.renderUsersPage = function() {
+        const pg = document.getElementById('users-content');
+        if (pg) pg.innerHTML = '<div class="empty"><div class="app-loading-spinner" style="margin:0 auto 16px"></div>Chargement...</div>';
+        if (typeof renderUsersAdmin === 'function') renderUsersAdmin();
+    };
+
+    window.renderDecisionPage = function() {
+        const pg = document.getElementById('decision-content');
+        if (!pg) return;
+
+        const D_ref   = window.D || { projects:[], workItems:[], tenders:[], members:[], sprints:[] };
+        const alerts  = typeof AlertEngine !== 'undefined' ? AlertEngine.compute() : [];
+        const critical = alerts.filter(a => a.level === 'critical');
+        const now      = new Date();
+
+        const riskProjects = D_ref.projects
+            .filter(p => p.status !== 'Terminé')
+            .map(p => {
+                const score = typeof AlertEngine !== 'undefined'
+                    ? AlertEngine.riskScore(p)
+                    : { score: 0, color: 'var(--text3)', factors: [] };
+                return { ...p, _risk: score };
+            })
+            .sort((a, b) => b._risk.score - a._risk.score)
+            .slice(0, 6);
+
+        const totalAO   = D_ref.tenders.length;
+        const wonAO     = D_ref.tenders.filter(t => t.status === 'Gagné').length;
+        const winRate   = totalAO ? Math.round(wonAO / totalAO * 100) : 0;
+        const pendingAO = D_ref.tenders.filter(t => !['Gagné','Perdu'].includes(t.status)).length;
+        const totalBudget = D_ref.tenders.reduce((s, t) => s + (t.amount || 0), 0);
+
+        pg.innerHTML = `
+        <div style="margin-bottom:24px;padding:18px 20px;background:linear-gradient(135deg,rgba(14,181,204,.06),var(--card));border:1px solid rgba(14,181,204,.15);border-radius:var(--radius);display:flex;align-items:center;gap:16px">
             <div style="font-size:32px">🎯</div>
-            <div>
-                <div style="font-size:16px;font-weight:700">Aide à la décision intelligente</div>
-                <div style="font-size:12px;color:var(--text2);margin-top:2px">Analyse automatique des risques, recommandations et indicateurs de performance</div>
+            <div style="flex:1">
+                <div style="font-size:16px;font-weight:800">Aide à la décision intelligente</div>
+                <div style="font-size:12px;color:var(--text2);margin-top:3px">Analyse automatique des risques, recommandations et indicateurs de performance</div>
             </div>
-            <div style="margin-left:auto">
-                <span style="font-size:10px;padding:4px 10px;background:var(--greenbg);color:var(--green);border-radius:6px;font-weight:700;font-family:var(--mono)">
-                    ● LIVE
-                </span>
-            </div>
+            <span style="font-size:10px;padding:4px 10px;background:var(--greenbg);color:var(--green);border-radius:6px;font-weight:700;font-family:var(--mono)">● LIVE</span>
         </div>
 
-        <!-- KPIs stratégiques -->
         <div class="stats-grid" style="margin-bottom:20px">
             <div class="stat-card c-accent">
                 <div class="stat-value">${critical.length}</div>
@@ -768,32 +1895,29 @@ function renderDecisionPage() {
             <div class="stat-card c-blue">
                 <div class="stat-value">${pendingAO}</div>
                 <div class="stat-label">AO en cours</div>
-                <div class="stat-change neutral">${fmt(totalBudget)} FCFA</div>
+                <div class="stat-change neutral">${(typeof fmt === 'function' ? fmt(totalBudget) : totalBudget)} FCFA</div>
                 <div class="stat-icon">💼</div>
             </div>
             <div class="stat-card c-purple">
-                <div class="stat-value">${D.projects.filter(p=>p.status==='En cours').length}</div>
+                <div class="stat-value">${D_ref.projects.filter(p => p.status === 'En cours').length}</div>
                 <div class="stat-label">Projets actifs</div>
-                <div class="stat-change neutral">${D.members.length} membres</div>
+                <div class="stat-change neutral">${D_ref.members.length} membres</div>
                 <div class="stat-icon">📊</div>
             </div>
         </div>
 
         <div class="grid-2">
-            <!-- Scores de risque -->
             <div class="card">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+                <div class="row-space mb-8">
                     <div class="section-title" style="margin:0">🧠 Scores de risque projets</div>
-                    <button class="btn btn-outline btn-sm" onclick="nav('calendar',document.querySelector('[data-page=calendar]'));setTimeout(()=>setCalView('risk'),200)">
-                        Vue détaillée →
-                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="nav('calendar',document.querySelector('[data-page=calendar]'))">Détails →</button>
                 </div>
                 ${riskProjects.map(p => {
-                    const r = p._risk;
+                    const r  = p._risk;
                     const r2 = 16, cx = 20, cy = 20;
                     const circ = 2 * Math.PI * r2;
                     const dash = circ * r.score / 100;
-                    return `<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="openSWOT(${p.id})">
+                    return `<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="typeof openSWOT!=='undefined'&&openSWOT(${p.id})">
                         <svg width="40" height="40" viewBox="0 0 40 40" style="transform:rotate(-90deg);flex-shrink:0">
                             <circle cx="${cx}" cy="${cy}" r="${r2}" fill="none" stroke="var(--border)" stroke-width="3"/>
                             <circle cx="${cx}" cy="${cy}" r="${r2}" fill="none" stroke="${r.color}" stroke-width="3"
@@ -801,209 +1925,334 @@ function renderDecisionPage() {
                         </svg>
                         <div style="flex:1;min-width:0">
                             <div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
-                            <div style="font-size:10px;color:var(--text3)">${p.status} · ${p.progress||0}%</div>
+                            <div style="font-size:10px;color:var(--text3)">${p.status} · ${p.progress || 0}%</div>
                         </div>
                         <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${r.color}">${r.score}</div>
-                        <div style="font-size:10px;color:var(--text3)">🧠 SWOT</div>
                     </div>`;
-                }).join('') || '<div style="text-align:center;padding:20px;color:var(--text3)">Aucun projet actif</div>'}
+                }).join('') || '<div class="empty" style="padding:20px">Aucun projet actif</div>'}
             </div>
-
-            <!-- Recommandations automatiques -->
             <div class="card">
                 <div class="section-title">💡 Recommandations</div>
-                <div id="recommendations-list">
-                    ${generateRecommendations()}
-                </div>
+                <div id="recommendations-list">${generateRecommendations(D_ref)}</div>
             </div>
         </div>
 
-        <!-- SWOT comparatif -->
-        <div class="card" style="margin-top:16px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
-                <div class="section-title" style="margin:0">🧠 Matrices SWOT des projets actifs</div>
-                <div style="display:flex;gap:8px;flex-wrap:wrap">
-                    ${D.projects.filter(p=>p.status!=='Terminé').slice(0,5).map(p =>
-                        `<button class="btn btn-outline btn-sm" onclick="openSWOT(${p.id})">
-                            ${p.name.substring(0,18)}
-                        </button>`
-                    ).join('')}
-                </div>
-            </div>
-            <div style="font-size:12px;color:var(--text2);padding:10px;background:var(--surface);border-radius:8px">
-                Clique sur un projet ci-dessus pour voir sa matrice SWOT complète, générée automatiquement depuis les données du projet en temps réel.
-            </div>
-        </div>
-
-        <!-- Analyse pipeline AO -->
-        <div class="card" style="margin-top:16px">
+        <div class="card mt-16">
             <div class="section-title">📊 Analyse Pipeline Commercial</div>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:12px">
                 ${[
-                    ['Détection','var(--text3)'],
-                    ['Qualification','var(--blue)'],
-                    ['Préparation','var(--orange)'],
-                    ['Soumis','var(--accent)'],
-                    ['Gagné','var(--green)'],
-                    ['Perdu','var(--red)'],
-                ].map(([s,c]) => {
-                    const items = D.tenders.filter(t=>t.status===s);
-                    const total = items.reduce((a,t)=>a+(t.amount||0),0);
+                    ['Détection','var(--text3)'], ['Qualification','var(--blue)'],
+                    ['Préparation','var(--orange)'], ['Soumis','var(--accent)'],
+                    ['Gagné','var(--green)'], ['Perdu','var(--red)'],
+                ].map(([s, c]) => {
+                    const items = D_ref.tenders.filter(t => t.status === s);
+                    const total = items.reduce((a, t) => a + (t.amount || 0), 0);
                     return `<div style="padding:12px;background:var(--surface);border-radius:8px;border-left:3px solid ${c}">
-                        <div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:6px">${s.toUpperCase()}</div>
-                        <div style="font-size:20px;font-weight:700;color:${c}">${items.length}</div>
-                        <div style="font-size:10px;color:var(--text2);margin-top:2px">${fmt(total)} FCFA</div>
+                        <div style="font-size:10px;color:var(--text3);font-weight:700;margin-bottom:6px;font-family:var(--mono);letter-spacing:1px">${s.toUpperCase()}</div>
+                        <div style="font-size:20px;font-weight:800;color:${c};font-family:var(--mono)">${items.length}</div>
+                        <div style="font-size:10px;color:var(--text2);margin-top:2px">${(typeof fmt === 'function' ? fmt(total) : total)} FCFA</div>
                     </div>`;
                 }).join('')}
             </div>
-        </div>
-    `;
-}
+        </div>`;
+    };
 
-function generateRecommendations() {
-    const recs = [];
-    const now  = new Date();
+    /* ═══════════════════════════════════════════════════════════
+       4. GÉNÉRATION DE RECOMMANDATIONS
+       ═══════════════════════════════════════════════════════════ */
+    window.generateRecommendations = function(D_ref) {
+        const D_data = D_ref || window.D || { projects:[], workItems:[], tenders:[], members:[] };
+        const recs   = [];
+        const now    = new Date();
+        const colors = { critical:'var(--red)', warning:'var(--orange)', info:'var(--blue)', success:'var(--green)' };
+        const bgs    = { critical:'var(--redbg)', warning:'var(--orangebg)', info:'var(--bluebg)', success:'var(--greenbg)' };
 
-    // Retards projets
-    D.projects.forEach(p => {
-        if (!p.deadline || p.status === 'Terminé') return;
-        const diff = Math.floor((new Date(p.deadline) - now) / 86400000);
-        if (diff < 0) recs.push({ icon:'🚨', level:'critical', text:`Relancer le projet <strong>${p.name}</strong> — deadline dépassée de ${Math.abs(diff)}j`, action:`openSWOT(${p.id})`, actionLabel:'Voir SWOT' });
-        else if (diff <= 7 && (p.progress||0) < 70) recs.push({ icon:'⚠️', level:'warning', text:`Accélérer <strong>${p.name}</strong> — ${diff}j restants, ${p.progress||0}% seulement`, action:`nav('board',null)`, actionLabel:'Kanban' });
+        D_data.projects.forEach(p => {
+            if (!p.deadline || p.status === 'Terminé') return;
+            const diff = Math.floor((new Date(p.deadline) - now) / 86400000);
+            if (diff < 0) recs.push({ icon:'🚨', level:'critical', text:`Relancer <strong>${p.name}</strong> — deadline dépassée de ${Math.abs(diff)}j`, action:`typeof openSWOT!=='undefined'&&openSWOT(${p.id})`, label:'Voir SWOT' });
+            else if (diff <= 7 && (p.progress||0) < 70) recs.push({ icon:'⚠️', level:'warning', text:`Accélérer <strong>${p.name}</strong> — ${diff}j restants, ${p.progress||0}% seulement`, action:`nav('board',null)`, label:'Kanban' });
+        });
+
+        const bugs = D_data.workItems.filter(w => w.type === 'bug' && w.status !== 'Terminé');
+        if (bugs.length >= 3) recs.push({ icon:'🐛', level:'warning', text:`<strong>${bugs.length} bugs ouverts</strong> — dette technique à résorber`, action:`nav('board',null)`, label:'Voir bugs' });
+
+        const aoSansResp = D_data.tenders.filter(t => !t.lead && !['Gagné','Perdu'].includes(t.status));
+        if (aoSansResp.length) recs.push({ icon:'📋', level:'info', text:`<strong>${aoSansResp.length} AO sans responsable</strong> — assigner un référent`, action:`nav('tenders',null)`, label:'AO' });
+
+        const won = D_data.tenders.filter(t => t.status === 'Gagné');
+        if (won.length > 0) recs.push({ icon:'🏆', level:'success', text:`<strong>${won.length} AO gagnés</strong> — capitaliser sur ces succès`, action:null });
+
+        if (!recs.length) recs.push({ icon:'✅', level:'success', text:'Tous les indicateurs sont au vert — continuez ainsi !', action:null });
+
+        return recs.slice(0, 8).map(r => `
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:10px;margin-bottom:8px;background:${bgs[r.level]};border-radius:8px;border-left:3px solid ${colors[r.level]}">
+                <span style="font-size:16px;flex-shrink:0;margin-top:1px">${r.icon}</span>
+                <div style="flex:1;font-size:12px;line-height:1.5">${r.text}</div>
+                ${r.action ? `<button class="btn btn-outline btn-sm" onclick="${r.action}" style="flex-shrink:0;font-size:10px">${r.label}</button>` : ''}
+            </div>`).join('');
+    };
+
+    /* ═══════════════════════════════════════════════════════════
+       5. ALERTES DASHBOARD
+       ═══════════════════════════════════════════════════════════ */
+    window.renderDashboardAlerts = function() {
+        const el = document.getElementById('d-alerts-summary');
+        if (!el) return;
+        const alerts = typeof AlertEngine !== 'undefined' ? AlertEngine.compute().slice(0, 4) : [];
+        const colorMap = { critical:'var(--red)', warning:'var(--orange)', info:'var(--accent)' };
+        if (!alerts.length) {
+            el.innerHTML = '<div style="text-align:center;padding:16px;color:var(--green);font-size:12px">✅ Aucune alerte — tout est sous contrôle</div>';
+            return;
+        }
+        el.innerHTML = alerts.map(a => `
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+                <div style="width:7px;height:7px;border-radius:50%;background:${colorMap[a.level]||'var(--blue)'};flex-shrink:0"></div>
+                <div style="flex:1;font-size:12px"><strong>${a.title}</strong> — ${a.desc}</div>
+                <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">${a.time || ''}</div>
+            </div>`).join('') +
+            `<div style="text-align:center;margin-top:10px">
+                <button class="btn btn-outline btn-sm" onclick="nav('calendar',document.querySelector('[data-page=calendar]'))">
+                    Voir toutes les alertes →
+                </button></div>`;
+    };
+
+    /* ═══════════════════════════════════════════════════════════
+       6. PATCH renderDashboard — injecte les alertes
+       ═══════════════════════════════════════════════════════════ */
+    const _origRenderDashboard = typeof renderDashboard === 'function' ? renderDashboard.bind(window) : null;
+    window.renderDashboard = function() {
+        if (_origRenderDashboard) _origRenderDashboard();
+        setTimeout(renderDashboardAlerts, 120);
+    };
+
+    /* ═══════════════════════════════════════════════════════════
+       7. CHIPS ALERTES sidebar
+       ═══════════════════════════════════════════════════════════ */
+    window.updateChips = function() {
+        const D_ref   = window.D || { workItems:[], tenders:[] };
+        const active  = D_ref.workItems.filter(w => w.status === 'En cours').length;
+        const aos     = D_ref.tenders.filter(t => !['Gagné','Perdu'].includes(t.status)).length;
+        const critCnt = typeof AlertEngine !== 'undefined'
+            ? AlertEngine.compute().filter(a => a.level === 'critical').length
+            : 0;
+        const c1 = document.getElementById('chip-board');
+        const c2 = document.getElementById('chip-ao');
+        const c3 = document.getElementById('chip-alerts');
+        if (c1) c1.textContent = active;
+        if (c2) c2.textContent = aos;
+        if (c3) { c3.textContent = critCnt; c3.style.display = critCnt > 0 ? 'inline-flex' : 'none'; }
+    };
+
+    /* ═══════════════════════════════════════════════════════════
+       8. ROLE LABEL dans la sidebar
+       ═══════════════════════════════════════════════════════════ */
+    const _origUpdateUserBar = typeof updateUserBar === 'function' ? updateUserBar.bind(window) : null;
+    window.updateUserBar = function(user) {
+        if (_origUpdateUserBar) _origUpdateUserBar(user);
+        if (!user) return;
+        const roleIcons = { admin:'👑 Admin', manager:'🎯 Manager', member:'👤 Membre' };
+        const rl = document.getElementById('role-label');
+        const ur = document.getElementById('user-role-lbl');
+        if (rl) rl.textContent = roleIcons[user.role] || 'WORKSPACE';
+        if (ur) ur.textContent = roleIcons[user.role] || 'Se déconnecter';
+    };
+
+    /* ═══════════════════════════════════════════════════════════
+       9. BOUTON SWOT dans modal projet
+       ═══════════════════════════════════════════════════════════ */
+    const _origOpenProjModal = typeof openProjModal === 'function' ? openProjModal.bind(window) : null;
+    window.openProjModal = function(id = null) {
+        if (_origOpenProjModal) _origOpenProjModal(id);
+        const btn = document.getElementById('btn-swot-proj');
+        if (btn) btn.style.display = id ? 'flex' : 'none';
+    };
+
+    /* ═══════════════════════════════════════════════════════════
+       10. RECHERCHE GLOBALE
+       ═══════════════════════════════════════════════════════════ */
+    window.handleSearch = function(val) {
+        if (!val || val.length < 2) return;
+        const q = val.toLowerCase();
+        const D_ref = window.D || { projects:[], workItems:[], tenders:[] };
+        const results = [
+            ...D_ref.projects.filter(p => p.name.toLowerCase().includes(q)).map(p => ({ type:'Projet', label:p.name, action:`openProjModal(${p.id})` })),
+            ...D_ref.workItems.filter(w => (w.title||'').toLowerCase().includes(q)).slice(0, 3).map(w => ({ type:'Ticket', label:w.title, action:`openWIModal(${w.id})` })),
+            ...D_ref.tenders.filter(t => (t.org||'').toLowerCase().includes(q)).map(t => ({ type:'AO', label:t.org, action:`openAOModal(${t.id})` })),
+        ].slice(0, 5);
+        if (results.length && typeof toast !== 'undefined') {
+            toast(`${results.length} résultat(s) pour "${val}"`, 'info', '🔍');
+        }
+    };
+
+    /* ═══════════════════════════════════════════════════════════
+       11. COMMANDE PALETTE (Ctrl+K) — Innovation
+       ═══════════════════════════════════════════════════════════ */
+    const CMD_SHORTCUTS = [
+        { icon:'📊', label:'Dashboard', type:'Navigation', action:() => nav('dashboard', document.querySelector('[data-page=dashboard]')) },
+        { icon:'📁', label:'Projets',   type:'Navigation', action:() => nav('projects', document.querySelector('[data-page=projects]')) },
+        { icon:'📋', label:'Kanban Board', type:'Navigation', action:() => nav('board', document.querySelector('[data-page=board]')) },
+        { icon:'📅', label:'Calendrier & Alertes', type:'Navigation', action:() => nav('calendar', document.querySelector('[data-page=calendar]')) },
+        { icon:'🎯', label:'Aide à la décision',   type:'Navigation', action:() => nav('decision', document.querySelector('[data-page=decision]')) },
+        { icon:'📄', label:'Appels d\'offres',     type:'Navigation', action:() => nav('tenders', document.querySelector('[data-page=tenders]')) },
+        { icon:'👥', label:'Équipe',    type:'Navigation', action:() => nav('team', document.querySelector('[data-page=team]')) },
+        { icon:'📈', label:'Analytics', type:'Navigation', action:() => nav('analytics', document.querySelector('[data-page=analytics]')) },
+        { icon:'➕', label:'Nouveau ticket', type:'Action', action:() => typeof openWIModal === 'function' && openWIModal() },
+        { icon:'🗂', label:'Nouveau projet', type:'Action', action:() => typeof openProjModal === 'function' && openProjModal() },
+        { icon:'📝', label:'Nouvel AO',     type:'Action', action:() => typeof openAOModal === 'function' && openAOModal() },
+        { icon:'🚪', label:'Se déconnecter', type:'Compte', action:() => doLogout() },
+    ];
+
+    let _cmdIdx = 0;
+
+    window.openCmdPalette = function() {
+        const ov = document.getElementById('cmd-overlay');
+        const inp = document.getElementById('cmd-input');
+        if (!ov) return;
+        ov.classList.add('open');
+        if (inp) { inp.value = ''; inp.focus(); }
+        updateCmdResults('');
+    };
+
+    window.closeCmdPalette = function() {
+        document.getElementById('cmd-overlay')?.classList.remove('open');
+    };
+
+    window.updateCmdResults = function(query) {
+        const el = document.getElementById('cmd-results');
+        if (!el) return;
+        _cmdIdx = 0;
+
+        const q = query.toLowerCase().trim();
+        let items = q
+            ? CMD_SHORTCUTS.filter(s => s.label.toLowerCase().includes(q))
+            : CMD_SHORTCUTS;
+
+        // Ajouter résultats données
+        if (q && window.D) {
+            const D_ref = window.D;
+            D_ref.projects.filter(p => p.name.toLowerCase().includes(q)).slice(0, 3).forEach(p => {
+                items.push({ icon:'📁', label:p.name, type:'Projet', action:() => openProjModal && openProjModal(p.id) });
+            });
+            D_ref.tenders.filter(t => (t.org||'').toLowerCase().includes(q)).slice(0, 2).forEach(t => {
+                items.push({ icon:'📄', label:t.org || t.title, type:'AO', action:() => openAOModal && openAOModal(t.id) });
+            });
+        }
+
+        if (!items.length) {
+            el.innerHTML = '<div class="cmd-empty">Aucun résultat pour cette recherche</div>';
+            return;
+        }
+
+        el.innerHTML = items.slice(0, 10).map((s, i) => `
+            <div class="cmd-item${i === 0 ? ' selected' : ''}" data-idx="${i}"
+                 onclick="execCmdItem(${i})">
+                <span class="cmd-item-icon">${s.icon}</span>
+                <span class="cmd-item-label">${s.label}</span>
+                <span class="cmd-item-type">${s.type}</span>
+            </div>`).join('');
+
+        el._items = items;
+    };
+
+    window.execCmdItem = function(idx) {
+        const el = document.getElementById('cmd-results');
+        const items = el?._items;
+        if (items && items[idx]) {
+            closeCmdPalette();
+            items[idx].action();
+        }
+    };
+
+    window.handleCmdKey = function(e) {
+        const el = document.getElementById('cmd-results');
+        const items = el?._items || [];
+        const cards = el?.querySelectorAll('.cmd-item');
+        if (!cards?.length) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            _cmdIdx = Math.min(_cmdIdx + 1, cards.length - 1);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            _cmdIdx = Math.max(_cmdIdx - 1, 0);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            execCmdItem(_cmdIdx);
+            return;
+        } else if (e.key === 'Escape') {
+            closeCmdPalette();
+            return;
+        }
+
+        cards.forEach((c, i) => c.classList.toggle('selected', i === _cmdIdx));
+        cards[_cmdIdx]?.scrollIntoView({ block:'nearest' });
+    };
+
+    // Raccourci clavier global
+    document.addEventListener('keydown', e => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            const ov = document.getElementById('cmd-overlay');
+            if (ov?.classList.contains('open')) closeCmdPalette();
+            else openCmdPalette();
+        }
     });
 
-    // Bugs critiques
-    const bugs = D.workItems.filter(w => w.type === 'bug' && w.status !== 'Terminé');
-    if (bugs.length >= 3) recs.push({ icon:'🐛', level:'warning', text:`<strong>${bugs.length} bugs ouverts</strong> — dette technique à résorber en priorité`, action:`nav('board',null)`, actionLabel:'Voir bugs' });
-
-    // AO sans responsable
-    const aoSansResp = D.tenders.filter(t => !t.lead && !['Gagné','Perdu'].includes(t.status));
-    if (aoSansResp.length) recs.push({ icon:'📋', level:'info', text:`<strong>${aoSansResp.length} AO sans responsable</strong> — assigner un référent`, action:`nav('tenders',null)`, actionLabel:'AO' });
-
-    // Bonne nouvelle
-    const won = D.tenders.filter(t => t.status === 'Gagné');
-    if (won.length > 0) recs.push({ icon:'🏆', level:'success', text:`<strong>${won.length} AO gagnés</strong> — capitaliser sur ces succès pour de nouvelles opportunités`, action:null });
-
-    if (!recs.length) recs.push({ icon:'✅', level:'success', text:'Tous les indicateurs sont au vert — continuez ainsi !', action:null });
-
-    const colors = { critical:'var(--red)', warning:'var(--orange)', info:'var(--blue)', success:'var(--green)' };
-    const bgs    = { critical:'var(--redbg)', warning:'var(--orangebg)', info:'var(--bluebg)', success:'var(--greenbg)' };
-
-    return recs.slice(0,8).map(r => `
-        <div style="display:flex;align-items:flex-start;gap:10px;padding:10px;margin-bottom:8px;background:${bgs[r.level]};border-radius:8px;border-left:3px solid ${colors[r.level]}">
-            <span style="font-size:16px;flex-shrink:0">${r.icon}</span>
-            <div style="flex:1;font-size:12px;line-height:1.5">${r.text}</div>
-            ${r.action ? `<button class="btn btn-outline btn-sm" onclick="${r.action}" style="flex-shrink:0;font-size:10px">${r.actionLabel}</button>` : ''}
-        </div>`).join('');
-}
-
-// 7. Résumé alertes dans le Dashboard
-function renderDashboardAlerts() {
-    const el = document.getElementById('d-alerts-summary');
-    if (!el) return;
-    const alerts = typeof AlertEngine !== 'undefined' ? AlertEngine.compute().slice(0,4) : [];
-    if (!alerts.length) {
-        el.innerHTML = '<div style="text-align:center;padding:16px;color:var(--green);font-size:12px">✅ Aucune alerte — tout est sous contrôle</div>';
-        return;
-    }
-    const colorMap = { critical:'var(--red)', warning:'var(--orange)', info:'var(--blue)' };
-    el.innerHTML = alerts.map(a => `
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-            <div style="width:8px;height:8px;border-radius:50%;background:${colorMap[a.level]||'var(--blue)'};flex-shrink:0"></div>
-            <div style="flex:1;font-size:12px"><strong>${a.title}</strong> — ${a.desc}</div>
-            <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">${a.time}</div>
-        </div>`).join('') +
-        (alerts.length >= 4 ? `<div style="text-align:center;margin-top:10px">
-            <button class="btn btn-outline btn-sm" onclick="nav('calendar',document.querySelector('[data-page=calendar]'))">
-                Voir toutes les alertes →
-            </button></div>` : '');
-}
-
-// 8. Patch renderDashboard pour injecter les alertes
-const _origRenderDashboard = typeof renderDashboard === 'function' ? renderDashboard : null;
-function renderDashboard() {
-    if (_origRenderDashboard) _origRenderDashboard();
-    setTimeout(renderDashboardAlerts, 100);
-}
-
-// 9. Bouton SWOT dans modal projet
-const _origOpenProjModal = typeof openProjModal === 'function' ? openProjModal : null;
-function openProjModal(id = null) {
-    if (_origOpenProjModal) _origOpenProjModal(id);
-    const btn = document.getElementById('btn-swot-proj');
-    if (btn) btn.style.display = id ? 'flex' : 'none';
-}
-
-// 10. Role label dans la sidebar
-const _origUpdateUserBar = typeof updateUserBar === 'function' ? updateUserBar : null;
-function updateUserBar(user) {
-    if (_origUpdateUserBar) _origUpdateUserBar(user);
-    if (!user) return;
-    const roleLabel = document.getElementById('role-label');
-    const userRoleLbl = document.getElementById('user-role-lbl');
-    const roleIcons = { admin:'👑 Admin', manager:'🎯 Manager', member:'👤 Membre' };
-    if (roleLabel) roleLabel.textContent = (roleIcons[user.role] || 'WORKSPACE');
-    if (userRoleLbl) userRoleLbl.textContent = roleIcons[user.role] || 'Se déconnecter';
-}
-
-// 11. Chips alertes dans la sidebar
-function updateChips() {
-    const active = D.workItems.filter(w => w.status === 'En cours').length;
-    const aos    = D.tenders.filter(t => !['Gagné','Perdu'].includes(t.status)).length;
-    const alerts = typeof AlertEngine !== 'undefined' ? AlertEngine.compute().filter(a => a.level === 'critical').length : 0;
-    const c1 = document.getElementById('chip-board');
-    const c2 = document.getElementById('chip-ao');
-    const c3 = document.getElementById('chip-alerts');
-    if (c1) c1.textContent = active;
-    if (c2) c2.textContent = aos;
-    if (c3) { c3.textContent = alerts; c3.style.display = alerts > 0 ? 'inline-flex' : 'none'; }
-}
-
-// 12. Recherche globale simple
-function handleSearch(val) {
-    if (!val || val.length < 2) return;
-    val = val.toLowerCase();
-    const results = [
-        ...D.projects.filter(p => p.name.toLowerCase().includes(val)).map(p => ({ type:'Projet', label:p.name, action:`openProjModal(${p.id})` })),
-        ...D.workItems.filter(w => w.title.toLowerCase().includes(val)).slice(0,3).map(w => ({ type:'Ticket', label:w.title, action:`openWIModal(${w.id})` })),
-        ...D.tenders.filter(t => (t.org||'').toLowerCase().includes(val)).map(t => ({ type:'AO', label:t.org, action:`openAOModal(${t.id})` })),
-    ].slice(0,5);
-    if (results.length) toast(`${results.length} résultat(s) pour "${val}"`, 'info', '🔍');
-}
-
-// ── FIX CLOCHE DOUBLE ─────────────────────────────────────
-// alerts_calendar.js injecte sa cloche dans #notif-anchor.
-// Si une deuxième cloche apparaît ailleurs, on la supprime.
-(function fixDoubleBell() {
-    function dedupBell() {
-        // Déplacer le notif-wrapper de alerts_calendar vers #notif-anchor si besoin
+    /* ═══════════════════════════════════════════════════════════
+       12. FIX CLOCHE UNIQUE — place la cloche dans #notif-anchor
+       CORRECTION : s'exécute APRÈS le chargement de alerts_calendar.js
+       ═══════════════════════════════════════════════════════════ */
+    function ensureSingleBell() {
         const anchor  = document.getElementById('notif-anchor');
         const wrapper = document.getElementById('notif-wrapper');
+
+        // Déplacer le wrapper vers l'anchor si besoin
         if (anchor && wrapper && wrapper.parentElement !== anchor) {
             anchor.appendChild(wrapper);
         }
-        // Supprimer tout doublon
+
+        // Supprimer tous les wrappers dupliqués
         const all = document.querySelectorAll('.notif-wrapper');
         if (all.length > 1) {
             for (let i = 1; i < all.length; i++) all[i].remove();
         }
-        // Supprimer aussi les boutons cloche orphelins hors wrapper
+
+        // Supprimer boutons cloche orphelins
         document.querySelectorAll('.notif-btn').forEach((btn, i) => {
-            if (i > 0) btn.remove();
+            if (!btn.closest('#notif-anchor')) btn.remove();
         });
     }
-    // Lancer après chargement complet des scripts
-    if (document.readyState === 'complete') { dedupBell(); }
-    else { window.addEventListener('load', dedupBell); }
-    // Sécurité : relancer après 500ms au cas où alerts_calendar.js serait asynchrone
-    setTimeout(dedupBell, 500);
-})();
+
+    // Lancer après le DOM et après 500ms (alerts_calendar peut être async)
+    if (document.readyState === 'complete') {
+        ensureSingleBell();
+    } else {
+        window.addEventListener('load', ensureSingleBell);
+    }
+    setTimeout(ensureSingleBell, 600);
+    setTimeout(ensureSingleBell, 1500); // Sécurité supplémentaire
+
+    /* ═══════════════════════════════════════════════════════════
+       13. LOGO FALLBACK — si logo.png absent
+       ═══════════════════════════════════════════════════════════ */
+    document.querySelectorAll('img[src*="logo.png"]').forEach(img => {
+        if (img.getAttribute('data-fb-handled')) return;
+        img.setAttribute('data-fb-handled', '1');
+        img.addEventListener('error', function() {
+            this.style.display = 'none';
+            const fb = document.getElementById('sidebar-logo-fb');
+            if (fb) fb.style.display = 'flex';
+        }, { once: true });
+        if (img.complete && img.naturalWidth === 0) {
+            img.dispatchEvent(new Event('error'));
+        }
+    });
+
+})(); // fin integration()
 </script>
 <script src="{% static 'js/app.js' %}"></script>
-<script src="{% static 'js/fix.js' %}"></script>  
+<script src="{% static 'js/nan_fix.js' %}"></script>  ← ICI
 <script src="{% static 'js/alerts_calendar.js' %}"></script>
-<script src="{% static 'js/rbac_swot.js' %}"></script>
-<script src="{% static 'js/calendar_fix.js' %}"></script>
-<script src="{% static 'js/members_final.js' %}"></script>
 </body>
 </html>
