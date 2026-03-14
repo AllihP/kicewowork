@@ -1,88 +1,94 @@
 #!/usr/bin/env bash
 set -o errexit
 
-echo "==> KICEKO Build start"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  KICEKO ProjectHub — Build Render"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
+echo "==> 1. Installation des dependances..."
 pip install -r requirements.txt
 
+echo "==> 2. Fichiers statiques..."
 python manage.py collectstatic --no-input
+
+echo "==> 3. Migrations..."
 python manage.py migrate --no-input
 
-python manage.py shell << 'PYTHON'
-import os
-from django.contrib.auth.models import User
-from core.models import Member, UserProfile
- 
-# ── Créer les profils manquants pour tous les Users ──
-for user in User.objects.all():
-    profile, created = UserProfile.objects.get_or_create(user=user)
-    if user.is_superuser and profile.role != 'admin':
-        profile.role = 'admin'
-        profile.save()
-    if created:
-        print(f"  Profil créé : {user.username} ({profile.role})")
-
-
-echo "==> Seed données initiales si base vide..."
-python manage.py shell << 'PYTHON'
-from core.models import Member
-
-if Member.objects.count() == 0:
-    print("Base vide — création des membres...")
-    members = [
-        {"name": "Hilla Prince BAMBÉ",  "initials": "HP", "color": "#0eb5cc", "role": "Directeur Technique"},
-        {"name": "BABOGUEL",             "initials": "BA", "color": "#a855f7", "role": "Développeur"},
-        {"name": "LAGMET",               "initials": "LH", "color": "#3b82f6", "role": "GIS Expert"},
-        {"name": "KEMKONGDI",            "initials": "KS", "color": "#22c55e", "role": "Analyste"},
-        {"name": "Aïcha",                "initials": "AM", "color": "#ec4899", "role": "Chargée de projet"},
-    ]
-    for m in members:
-        Member.objects.get_or_create(
-            initials=m["initials"],
-            defaults=m
-        )
-    print(f"  ✅ {Member.objects.count()} membres créés")
-else:
-    print(f"  ✅ {Member.objects.count()} membres déjà en base")
-PYTHON
- 
-# ── Vérifier que les membres sont bien en base ──
-count = Member.objects.count()
-print(f"  Membres en base : {count}")
-if count == 0:
-    print("  ⚠️  Aucun membre — lancer seed_data")
- 
-# ── Stats de vérification ──
-from core.models import Project, WorkItem, Tender
-print(f"  Projets : {Project.objects.count()}")
-print(f"  Tickets : {WorkItem.objects.count()}")
-print(f"  AO      : {Tender.objects.count()}")
-print("  ✅ Vérification DB terminée")
-PYTHON
-
-
-
+echo "==> 4. Creation admin..."
 python manage.py shell << 'PYTHON'
 import os
 from django.contrib.auth.models import User
 try:
     from core.models import UserProfile
     has_profile = True
-except:
+except Exception:
     has_profile = False
 
 password = os.environ.get('ADMIN_PASSWORD', 'Kiceko@2025!')
-admin, _ = User.objects.get_or_create(username='admin')
+admin, created = User.objects.get_or_create(username='admin')
 admin.set_password(password)
 admin.is_superuser = True
-admin.is_staff = True
-admin.is_active = True
+admin.is_staff     = True
+admin.is_active    = True
+admin.first_name   = 'Hilla Prince'
+admin.last_name    = 'BAMBE'
 admin.save()
 if has_profile:
     p, _ = UserProfile.objects.get_or_create(user=admin)
     p.role = 'admin'
     p.save()
-print('Admin OK:', password)
+print('Admin OK ->', 'cree' if created else 'mis a jour', '/ password:', password)
 PYTHON
 
-echo "==> Build OK"
+echo "==> 5. Synchronisation profils..."
+python manage.py shell << 'PYTHON'
+from django.contrib.auth.models import User
+try:
+    from core.models import UserProfile
+except Exception:
+    print("UserProfile non disponible")
+    exit()
+for user in User.objects.all():
+    profile, created = UserProfile.objects.get_or_create(user=user)
+    if user.is_superuser and profile.role != 'admin':
+        profile.role = 'admin'
+        profile.save()
+    if created:
+        print('  Profil cree:', user.username)
+print('Profils OK ->', User.objects.count(), 'utilisateurs')
+PYTHON
+
+echo "==> 6. Seed membres si base vide..."
+python manage.py shell << 'PYTHON'
+from core.models import Member
+if Member.objects.count() == 0:
+    print("Base vide - creation des membres...")
+    membres = [
+        {"name": "Hilla Prince BAMBE", "initials": "HP", "color": "#0eb5cc", "role": "Directeur Technique"},
+        {"name": "BABOGUEL",           "initials": "BA", "color": "#a855f7", "role": "Developpeur"},
+        {"name": "LAGMET",             "initials": "LH", "color": "#3b82f6", "role": "GIS Expert"},
+        {"name": "KEMKONGDI",          "initials": "KS", "color": "#22c55e", "role": "Analyste"},
+        {"name": "Simon",              "initials": "SI", "color": "#ec4899", "role": "Charge de projet"},
+    ]
+    for m in membres:
+        Member.objects.get_or_create(initials=m["initials"], defaults=m)
+    print('Membres crees ->', Member.objects.count())
+else:
+    print('Membres deja en base ->', Member.objects.count())
+PYTHON
+
+echo "==> 7. Verification finale..."
+python manage.py shell << 'PYTHON'
+from core.models import Member, Project, WorkItem, Tender
+from django.contrib.auth.models import User
+print('Utilisateurs :', User.objects.count())
+print('Membres      :', Member.objects.count())
+print('Projets      :', Project.objects.count())
+print('Tickets      :', WorkItem.objects.count())
+print('AO           :', Tender.objects.count())
+PYTHON
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  Build termine avec succes!"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
