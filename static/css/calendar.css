@@ -1,0 +1,224 @@
+/* ═══════════════════════════════════════════════════
+   calendar.css — KICEKO ProjectHub
+   Classes CSS pour le calendrier (évite les styles inline
+   bloqués par la CSP en production sur Render)
+   ═══════════════════════════════════════════════════ */
+
+/* ── Layout principal ── */
+.cal-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.cal-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cal-month-label {
+  font-size: 15px;
+  font-weight: 700;
+  min-width: 180px;
+  text-align: center;
+  text-transform: uppercase;
+  font-family: var(--mono);
+  color: var(--text);
+}
+.cal-view-btns {
+  display: flex;
+  gap: 6px;
+}
+
+/* ── Vue Mois : grille ── */
+.cal-days-header {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+.cal-day-label {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text3);
+  font-family: var(--mono);
+  padding: 6px 0;
+}
+.cal-grid {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  gap: 2px;
+}
+.cal-cell {
+  min-height: 76px;
+  padding: 5px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  overflow: hidden;
+  position: relative;
+}
+.cal-cell.has-events {
+  background: var(--card2);
+  border-color: rgba(14,181,204,.15);
+}
+.cal-cell.is-today {
+  background: var(--accentbg);
+  border-color: rgba(14,181,204,.4);
+}
+.cal-cell.empty {
+  background: var(--surface);
+  opacity: .2;
+  border-color: transparent;
+}
+.cal-day-num {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text2);
+  margin-bottom: 3px;
+  display: block;
+}
+.cal-cell.is-today .cal-day-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--accent);
+  color: #000;
+  border-radius: 50%;
+  font-weight: 700;
+}
+.cal-event {
+  font-size: 9px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+.cal-event-projet  { background: rgba(34,197,94,.15);   color: #22c55e; border-left: 2px solid #22c55e; }
+.cal-event-ao      { background: rgba(14,181,204,.15);  color: var(--accent); border-left: 2px solid var(--accent); }
+.cal-event-tache   { background: rgba(168,85,247,.15);  color: #a855f7; border-left: 2px solid #a855f7; }
+.cal-event-bloque  { background: rgba(239,68,68,.15);   color: #ef4444; border-left: 2px solid #ef4444; }
+.cal-event-attente { background: rgba(249,115,22,.15);  color: #f97316; border-left:2px solid #f97316; }
+.cal-more {
+  font-size: 9px;
+  color: var(--text3);
+}
+
+/* ── Vue Liste ── */
+.cal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cal-list-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: var(--card);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+}
+.cal-list-item.is-retard  { border-color: rgba(239,68,68,.3);    border-left-color: var(--red); }
+.cal-list-item.is-urgent  { border-color: rgba(249,115,22,.3);   border-left-color: var(--orange); }
+.cal-list-item.is-ok      { border-left-color: var(--accent); }
+.cal-list-day {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 50px;
+}
+.cal-list-day.is-retard { color: var(--red); }
+.cal-list-day.is-urgent { color: var(--orange); }
+.cal-list-day.is-ok     { color: var(--text3); }
+.cal-list-info { flex: 1; min-width: 0; }
+.cal-list-label {
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cal-list-meta { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.cal-list-badge {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cal-list-badge.is-retard { background: var(--redbg);    color: var(--red); }
+.cal-list-badge.is-urgent { background: var(--orangebg); color: var(--orange); }
+.cal-list-badge.is-ok     { background: var(--greenbg);  color: var(--green); }
+
+/* ── Vue Risques ── */
+.cal-risk-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cal-risk-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.cal-risk-item:hover { border-color: rgba(14,181,204,.3); }
+.cal-risk-info { flex: 1; min-width: 0; }
+.cal-risk-name {
+  font-size: 13px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cal-risk-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.cal-risk-score-box { text-align: center; flex-shrink: 0; }
+.cal-risk-score {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: var(--mono);
+}
+.cal-risk-score-label {
+  font-size: 9px;
+  color: var(--text3);
+  font-family: var(--mono);
+}
+
+/* ── Légende ── */
+.cal-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-radius: 8px;
+}
+.cal-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--text2);
+}
+.cal-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
