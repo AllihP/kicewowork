@@ -18,8 +18,9 @@ try:
 except Exception:
     has_profile = False
 
+username = os.environ.get('ADMIN_USERNAME', 'admin')
 password = os.environ.get('ADMIN_PASSWORD', 'Kiceko@2025!')
-admin, created = User.objects.get_or_create(username='admin')
+admin, created = User.objects.get_or_create(username=username)
 admin.set_password(password)
 admin.is_superuser = True
 admin.is_staff     = True
@@ -31,7 +32,7 @@ if has_profile:
     p, _ = UserProfile.objects.get_or_create(user=admin)
     p.role = 'admin'
     p.save()
-print('Admin OK ->', 'cree' if created else 'mis a jour', '/ password:', password)
+print('Admin OK ->', 'cree' if created else 'mis a jour', '/ username:', username)
 PYTHON
 
 echo "==> 3. Synchronisation profils..."
