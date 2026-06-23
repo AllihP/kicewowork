@@ -1,2 +1,1 @@
-release: bash release.sh
-web: gunicorn kiceko_hub.wsgi --log-file - --workers 2
+web: bash release.sh && gunicorn kiceko_hub.wsgi --log-file - --workers 2
