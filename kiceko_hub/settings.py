@@ -131,7 +131,16 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ── CORS — ajouter pour Render ──────────────────────────────
-CORS_ALLOW_ALL_ORIGINS = True   # En prod, mettre False et lister les origines
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # True en dev, False en prod pour restreindre les origines
+if not DEBUG:
+    CORS_ALLOWED_ORIGINS = []
+    if host := os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
+        CORS_ALLOWED_ORIGINS.append(f'https://{host}')
+    if env_origins := os.environ.get('CORS_ALLOWED_ORIGINS'):
+        for o in env_origins.split(','):
+            if o.strip() and o.strip() not in CORS_ALLOWED_ORIGINS:
+                CORS_ALLOWED_ORIGINS.append(o.strip())
+
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
     'accept', 'accept-encoding', 'authorization',
