@@ -1761,17 +1761,11 @@
 
 
 <!-- ══════════════════════════════════════════════════════════════
-     SCRIPTS — ORDRE CRITIQUE
-     ─────────────────────────────────────────────────────────────
-     RÈGLE : TOUJOURS charger les fichiers JS en premier.
-     Le bloc <script> inline s'exécute EN DERNIER pour garantir
-     que toutes les fonctions (D, renderDashboard, etc.) existent.
+     SCRIPTS — ORDRE : app.js (auth/core) → main.js (fonctionnalités)
      ══════════════════════════════════════════════════════════════ -->
 <script src="{% static 'js/app.js' %}"></script>
-<script src="{% static 'js/alerts_calendar.js' %}"></script>
-<script src="{% static 'js/rbac_swot.js' %}"></script>
-<script src="{% static 'js/calendar_fix.js' %}"></script>
-<script src="{% static 'js/members_final.js' %}"></script>
+<script src="{% static 'js/main.js' %}"></script>
+<script src="{% static 'js/fixes.js' %}"></script>
 
 <!-- INTÉGRATION — après le chargement de tous les JS externes -->
 <script>
@@ -2251,8 +2245,6 @@
 
 })(); // fin integration()
 </script>
-<script src="{% static 'js/app.js' %}"></script>
-<script src="{% static 'js/nan_fix.js' %}"></script>  ← ICI
-<script src="{% static 'js/alerts_calendar.js' %}"></script>
+<script src="{% static 'js/nan_fix.js' %}"></script>
 </body>
 </html>

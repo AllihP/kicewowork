@@ -219,6 +219,7 @@ def update_user_role(request, user_id):
 class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class   = ProjectSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class   = NoPagination
 
     def get_queryset(self):
         user = self.request.user
@@ -275,6 +276,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 class WorkItemViewSet(viewsets.ModelViewSet):
     serializer_class   = WorkItemSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class   = NoPagination
 
     def get_queryset(self):
         user = self.request.user
@@ -298,6 +300,7 @@ class WorkItemViewSet(viewsets.ModelViewSet):
 class TenderViewSet(viewsets.ModelViewSet):
     serializer_class   = TenderSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class   = NoPagination
 
     def get_queryset(self):
         if get_user_role(self.request.user) in ('admin','manager'):
@@ -314,6 +317,7 @@ class TenderViewSet(viewsets.ModelViewSet):
 class SprintViewSet(viewsets.ModelViewSet):
     serializer_class   = SprintSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class   = NoPagination
 
     def get_queryset(self):
         if get_user_role(self.request.user) in ('admin','manager'):
