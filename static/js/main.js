@@ -1160,14 +1160,16 @@ window.saveWI = async function() {
     });
     if (res?.ok) {
         cm('modal-wi');
-        const saved = await res.json();
-        if (id) {
-            const idx=(window.D?.workItems||[]).findIndex(w=>w.id===id);
-            if (idx>=0) window.D.workItems[idx]={...window.D.workItems[idx],...saved};
-        } else (window.D?.workItems||[]).push(saved);
-        renderPage(window.currentPage);
-        _updateChips();
         toast(id?'Ticket mis à jour':'Ticket créé','success','✅');
+        try {
+            const fresh = await apiFetch('/api/workitems/');
+            if (fresh?.ok) {
+                const list = await fresh.json();
+                if (Array.isArray(list)) window.D.workItems = list;
+            }
+        } catch(e) { /* keep local */ }
+        if (typeof _updateChips==='function') _updateChips();
+        renderPage(window.currentPage);
     } else {
         const err = res?await res.json().catch(()=>({})):{};
         toast(Object.values(err).flat().join(', ')||'Erreur','error','❌');
@@ -1197,14 +1199,18 @@ window.saveProj = async function() {
     });
     if (res?.ok) {
         cm('modal-proj');
-        const saved = await res.json();
-        if (id) {
-            const idx=(window.D?.projects||[]).findIndex(p=>p.id===id);
-            if (idx>=0) window.D.projects[idx]={...window.D.projects[idx],...saved};
-        } else (window.D?.projects||[]).push(saved);
-        if (typeof _renderSidebar==='function') _renderSidebar();
-        renderPage(window.currentPage);
         toast(id?'Projet mis à jour':'Projet créé','success','✅');
+        // Recharger tous les projets depuis l'API pour avoir les données complètes
+        try {
+            const fresh = await apiFetch('/api/projects/');
+            if (fresh?.ok) {
+                const list = await fresh.json();
+                if (Array.isArray(list)) window.D.projects = list;
+            }
+        } catch(e) { /* keep local D.projects */ }
+        if (typeof _renderSidebar==='function') _renderSidebar();
+        if (typeof _updateChips==='function') _updateChips();
+        renderPage(window.currentPage);
     } else {
         const err = res?await res.json().catch(()=>({})):{};
         toast(Object.values(err).flat().join(', ')||'Erreur','error','❌');
@@ -1230,14 +1236,16 @@ window.saveAO = async function() {
     });
     if (res?.ok) {
         cm('modal-ao');
-        const saved = await res.json();
-        if (id) {
-            const idx=(window.D?.tenders||[]).findIndex(t=>t.id===id);
-            if (idx>=0) window.D.tenders[idx]={...window.D.tenders[idx],...saved};
-        } else (window.D?.tenders||[]).push(saved);
-        renderPage(window.currentPage);
-        _updateChips();
         toast(id?"AO mis à jour":"AO créé",'success','✅');
+        try {
+            const fresh = await apiFetch('/api/tenders/');
+            if (fresh?.ok) {
+                const list = await fresh.json();
+                if (Array.isArray(list)) window.D.tenders = list;
+            }
+        } catch(e) { /* keep local */ }
+        if (typeof _updateChips==='function') _updateChips();
+        renderPage(window.currentPage);
     } else {
         const err = res?await res.json().catch(()=>({})):{};
         toast(err.detail||'Erreur','error','❌');
@@ -1258,10 +1266,15 @@ window.saveMember = async function() {
     const res = await apiFetch('/api/team/create/', {method:'POST', body:JSON.stringify(data)});
     if (res?.ok) {
         cm('modal-member');
-        const saved = await res.json();
-        (window.D?.members||[]).push(saved);
-        renderPage(window.currentPage);
         toast('Membre ajouté','success','✅');
+        try {
+            const fresh = await apiFetch('/api/members/');
+            if (fresh?.ok) {
+                const list = await fresh.json();
+                if (Array.isArray(list)) window.D.members = list;
+            }
+        } catch(e) { /* keep local */ }
+        renderPage(window.currentPage);
     } else {
         const err = res?await res.json().catch(()=>({})):{};
         toast(err.detail||'Erreur','error','❌');
