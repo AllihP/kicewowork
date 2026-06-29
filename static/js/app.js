@@ -31,38 +31,73 @@ const D = {
     sprints:   []
 };
 
+// Expose D and state variables on window so main.js and other scripts can access them
+window.D = D;
+
 /** @string currentPage - Page actuellement affichée */
 let currentPage = 'dashboard';
+Object.defineProperty(window, 'currentPage', {
+    get() { return currentPage; },
+    set(v) { currentPage = v; }
+});
 
 /** @string boardFilter - Filtre actif du Kanban */
 let boardFilter = '';
+Object.defineProperty(window, 'boardFilter', {
+    get() { return boardFilter; },
+    set(v) { boardFilter = v; }
+});
 
 /** @number|null editProjId - ID du projet en édition */
 let editProjId = null;
+Object.defineProperty(window, 'editProjId', {
+    get() { return editProjId; },
+    set(v) { editProjId = v; }
+});
 
 /** @number|null editAOId - ID de l'AO en édition */
 let editAOId = null;
+Object.defineProperty(window, 'editAOId', {
+    get() { return editAOId; },
+    set(v) { editAOId = v; }
+});
 
 /** @number|null editWIId - ID du ticket en édition */
 let editWIId = null;
+Object.defineProperty(window, 'editWIId', {
+    get() { return editWIId; },
+    set(v) { editWIId = v; }
+});
 
 /** @object|null dashStats - Statistiques du dashboard */
 let dashStats = null;
+Object.defineProperty(window, 'dashStats', {
+    get() { return dashStats; },
+    set(v) { dashStats = v; }
+});
 
 /** @string projFilter - Filtre de projets actif */
 let projFilter = '';
+Object.defineProperty(window, 'projFilter', {
+    get() { return projFilter; },
+    set(v) { projFilter = v; }
+});
 
 /** @Date _calDate - Date actuelle du calendrier */
 let _calDate = new Date();
+Object.defineProperty(window, '_calDate', { get() { return _calDate; }, set(v) { _calDate = v; } });
 
 /** @string _calView - Vue du calendrier (month/list/risk) */
 let _calView = 'month';
+Object.defineProperty(window, '_calView', { get() { return _calView; }, set(v) { _calView = v; } });
 
 /** @array _alerts - Liste des alertes actives */
 let _alerts = [];
+Object.defineProperty(window, '_alerts', { get() { return _alerts; }, set(v) { _alerts = v; } });
 
 /** @boolean _notifInitialized - Évite la double initialisation des notifications */
 let _notifInitialized = false;
+Object.defineProperty(window, '_notifInitialized', { get() { return _notifInitialized; }, set(v) { _notifInitialized = v; } });
 
 // ═══════════════════════════════════════════════════════════════════
 // 2. CODES COULEUR PAR STATUT
